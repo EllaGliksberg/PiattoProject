@@ -1,12 +1,15 @@
 package com.example.piattoproject.ui.profile
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 
 class ProfileViewModel(
+    application: Application,
     private val profileMockDataSource: ProfileMockDataSource = ProfileMockDataSource(),
-) : ViewModel() {
+) : AndroidViewModel(application) {
+    private val profileImageLocalStore = ProfileImageLocalStore(application.applicationContext)
     private val _profileUiState = MutableLiveData<ProfileUiState>()
     val profileUiState: LiveData<ProfileUiState> = _profileUiState
 
@@ -15,7 +18,10 @@ class ProfileViewModel(
     }
 
     private fun loadProfile() {
-        _profileUiState.value = profileMockDataSource.getProfileUiState()
+        val initialState = profileMockDataSource.getProfileUiState()
+        _profileUiState.value = initialState.copy(
+            profileImageUri = profileImageLocalStore.getProfileImageUri(),
+        )
     }
 
     fun onEditClicked() {
@@ -85,6 +91,7 @@ class ProfileViewModel(
             displayName = displayName,
             username = username,
             bio = currentState.editedBio.trim(),
+            profileImageUri = currentState.profileImageUri,
             editedDisplayName = displayName,
             editedUsername = username,
             editedBio = currentState.editedBio.trim(),
@@ -93,6 +100,21 @@ class ProfileViewModel(
             displayNameError = null,
             usernameError = null,
         )
+    }
+
+    fun onProfileImageSelected(uri: String) {
+        val currentState = _profileUiState.value ?: return
+        profileImageLocalStore.saveProfileImageUri(uri)
+        _profileUiState.value = currentState.copy(profileImageUri = uri)
+    }
+
+    fun onProfileImageLoadFailed() {
+        val currentState = _profileUiState.value ?: return
+        if (currentState.profileImageUri == null) {
+            return
+        }
+        profileImageLocalStore.saveProfileImageUri(null)
+        _profileUiState.value = currentState.copy(profileImageUri = null)
     }
 
     private fun validateDisplayName(displayName: String): String? {

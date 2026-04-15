@@ -4,6 +4,7 @@ data class ProfileUiState(
     val displayName: String,
     val username: String,
     val bio: String,
+    val profileImageUri: String?,
     val editedDisplayName: String,
     val editedUsername: String,
     val editedBio: String,

@@ -9,6 +9,7 @@ class ProfileMockDataSource {
             displayName = displayName,
             username = username,
             bio = bio,
+            profileImageUri = null,
             editedDisplayName = displayName,
             editedUsername = username,
             editedBio = bio,
