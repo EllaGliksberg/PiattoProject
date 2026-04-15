@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">PiattoProject</string>
+    <string name="profile_title">Profile</string>
+    <string name="profile_photo_content_description">Profile photo</string>
+    <string name="mock_display_name">Ella Gliksberg</string>
+    <string name="mock_username">@ella_cooks</string>
+    <string name="mock_bio">Recipe lover sharing quick and healthy Mediterranean dishes.</string>
 </resources>
