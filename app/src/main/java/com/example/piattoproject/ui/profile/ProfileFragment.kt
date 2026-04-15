@@ -5,11 +5,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import com.example.piattoproject.R
+import androidx.lifecycle.ViewModelProvider
 import com.example.piattoproject.databinding.FragmentProfileBinding
 
 class ProfileFragment : Fragment() {
     private var binding: FragmentProfileBinding? = null
+    private lateinit var profileViewModel: ProfileViewModel
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -22,7 +23,8 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        bindMockProfileData()
+        profileViewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
+        observeProfileUiState()
     }
 
     override fun onDestroyView() {
@@ -30,10 +32,16 @@ class ProfileFragment : Fragment() {
         super.onDestroyView()
     }
 
-    private fun bindMockProfileData() {
+    private fun observeProfileUiState() {
+        profileViewModel.profileUiState.observe(viewLifecycleOwner) { uiState ->
+            bindProfileUiState(uiState)
+        }
+    }
+
+    private fun bindProfileUiState(uiState: ProfileUiState) {
         val viewBinding = binding ?: return
-        viewBinding.displayNameTextView.text = getString(R.string.mock_display_name)
-        viewBinding.usernameTextView.text = getString(R.string.mock_username)
-        viewBinding.bioTextView.text = getString(R.string.mock_bio)
+        viewBinding.displayNameTextView.text = uiState.displayName
+        viewBinding.usernameTextView.text = uiState.username
+        viewBinding.bioTextView.text = uiState.bio
     }
 }
