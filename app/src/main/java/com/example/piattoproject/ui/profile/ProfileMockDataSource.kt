@@ -14,9 +14,11 @@ class ProfileMockDataSource {
             editedUsername = username,
             editedBio = bio,
             isEditing = false,
+            isLoading = false,
             isSaving = false,
             displayNameError = null,
             usernameError = null,
+            errorMessage = null,
         )
     }
 }

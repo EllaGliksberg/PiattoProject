@@ -11,4 +11,5 @@
     <string name="profile_label_name">Name</string>
     <string name="profile_label_username">Username</string>
     <string name="profile_label_bio">Bio</string>
+    <string name="profile_syncing">Syncing profile...</string>
 </resources>

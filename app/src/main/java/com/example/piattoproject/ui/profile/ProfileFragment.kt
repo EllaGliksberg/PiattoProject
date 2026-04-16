@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.example.piattoproject.databinding.FragmentProfileBinding
+import com.google.android.material.snackbar.Snackbar
 
 class ProfileFragment : Fragment() {
     private var binding: FragmentProfileBinding? = null
@@ -87,6 +88,9 @@ class ProfileFragment : Fragment() {
         viewBinding.usernameTextView.text = uiState.username
         viewBinding.bioTextView.text = uiState.bio
         bindProfileImage(uiState.profileImageUri)
+        val shouldShowLoading = uiState.isLoading || uiState.isSaving
+        viewBinding.profileLoadingProgressBar.visibility = if (shouldShowLoading) View.VISIBLE else View.GONE
+        viewBinding.profileSyncStateTextView.visibility = if (shouldShowLoading) View.VISIBLE else View.GONE
 
         viewBinding.profileViewModeLayout.visibility = if (uiState.isEditing) View.GONE else View.VISIBLE
         viewBinding.viewModeActionsLayout.visibility = if (uiState.isEditing) View.GONE else View.VISIBLE
@@ -105,7 +109,16 @@ class ProfileFragment : Fragment() {
 
         viewBinding.displayNameInputLayout.error = uiState.displayNameError
         viewBinding.usernameInputLayout.error = uiState.usernameError
-        viewBinding.saveProfileButton.isEnabled = !uiState.isSaving
+        val isInteractionEnabled = !uiState.isSaving && !uiState.isLoading
+        viewBinding.saveProfileButton.isEnabled = isInteractionEnabled
+        viewBinding.editProfileButton.isEnabled = isInteractionEnabled
+        viewBinding.cancelEditButton.isEnabled = isInteractionEnabled
+        viewBinding.profileImageView.isEnabled = isInteractionEnabled
+
+        if (!uiState.errorMessage.isNullOrBlank()) {
+            Snackbar.make(viewBinding.root, uiState.errorMessage, Snackbar.LENGTH_LONG).show()
+            profileViewModel.onErrorMessageShown()
+        }
     }
 
     private fun bindProfileImage(profileImageUri: String?) {

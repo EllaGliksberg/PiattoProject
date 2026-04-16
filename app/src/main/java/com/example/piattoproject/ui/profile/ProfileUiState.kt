@@ -9,7 +9,9 @@ data class ProfileUiState(
     val editedUsername: String,
     val editedBio: String,
     val isEditing: Boolean,
+    val isLoading: Boolean,
     val isSaving: Boolean,
     val displayNameError: String?,
     val usernameError: String?,
+    val errorMessage: String?,
 )
