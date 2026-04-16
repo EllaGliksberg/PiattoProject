@@ -1,17 +1,15 @@
 package com.example.piattoproject.ui.profile
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.launch
 
 class ProfileViewModel(
-    application: Application,
+    private val profileImageLocalStore: ProfileImageLocalStore,
     private val repository: FirebaseProfileRepository = FirebaseProfileRepository(),
-) : AndroidViewModel(application) {
-    private val profileImageLocalStore = ProfileImageLocalStore(application.applicationContext)
+) : ViewModel() {
     private val _profileUiState = MutableLiveData(createInitialState())
     val profileUiState: LiveData<ProfileUiState> = _profileUiState
 

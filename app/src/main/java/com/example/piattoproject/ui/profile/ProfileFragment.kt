@@ -9,6 +9,7 @@ import android.view.ViewGroup
 import androidx.core.widget.doAfterTextChanged
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.piattoproject.databinding.FragmentProfileBinding
 import com.google.android.material.snackbar.Snackbar
@@ -41,7 +42,7 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        profileViewModel = ViewModelProvider(this)[ProfileViewModel::class.java]
+        profileViewModel = ViewModelProvider(this, ProfileViewModelFactory())[ProfileViewModel::class.java]
         setupListeners()
         observeProfileUiState()
     }
@@ -143,6 +144,18 @@ class ProfileFragment : Fragment() {
     private fun updateEditTextIfDifferent(currentValue: String?, targetValue: String, onUpdate: () -> Unit) {
         if (currentValue != targetValue) {
             onUpdate()
+        }
+    }
+
+    private inner class ProfileViewModelFactory : ViewModelProvider.Factory {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(ProfileViewModel::class.java)) {
+                @Suppress("UNCHECKED_CAST")
+                return ProfileViewModel(
+                    profileImageLocalStore = ProfileImageLocalStore(requireContext().applicationContext),
+                ) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
         }
     }
 }
