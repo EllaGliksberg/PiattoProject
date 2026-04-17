@@ -97,6 +97,7 @@ class ProfileFragment : Fragment() {
         viewBinding.viewModeActionsLayout.visibility = if (uiState.isEditing) View.GONE else View.VISIBLE
         viewBinding.profileEditModeLayout.visibility = if (uiState.isEditing) View.VISIBLE else View.GONE
         viewBinding.editModeActionsLayout.visibility = if (uiState.isEditing) View.VISIBLE else View.GONE
+        viewBinding.profileStatsLayout.visibility = if (uiState.isEditing) View.GONE else View.VISIBLE
 
         updateEditTextIfDifferent(viewBinding.displayNameEditText.text?.toString(), uiState.editedDisplayName) {
             viewBinding.displayNameEditText.setText(uiState.editedDisplayName)
