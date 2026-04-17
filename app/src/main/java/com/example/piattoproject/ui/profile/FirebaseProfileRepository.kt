@@ -13,7 +13,7 @@ class FirebaseProfileRepository(
         val uid = ensureSignedInUserId()
         val snapshot = firestore.collection(USERS_COLLECTION).document(uid).get().await()
         if (!snapshot.exists()) {
-            val defaultProfile = defaultProfile()
+            val defaultProfile = defaultProfile(auth.currentUser?.email)
             saveProfile(defaultProfile.fullName, defaultProfile.username, defaultProfile.bio)
             return defaultProfile
         }
@@ -51,18 +51,14 @@ class FirebaseProfileRepository(
         if (currentUser != null) {
             return currentUser.uid
         }
-        val authResult = auth.signInAnonymously().await()
-        val user = authResult.user
-        if (user != null) {
-            return user.uid
-        }
-        error("Anonymous authentication did not return a user")
+        error("User must be authenticated before accessing profile data")
     }
 
-    private fun defaultProfile(): FirebaseProfile {
+    private fun defaultProfile(email: String?): FirebaseProfile {
+        val username = email?.trim().orEmpty().ifBlank { "@new_user" }
         return FirebaseProfile(
             fullName = "New User",
-            username = "@new_user",
+            username = username,
             bio = "",
             imageUrl = null,
         )
