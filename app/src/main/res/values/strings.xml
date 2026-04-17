@@ -1,3 +1,15 @@
 <resources>
     <string name="app_name">PiattoProject</string>
+    <string name="profile_title">Profile</string>
+    <string name="profile_photo_content_description">Profile photo</string>
+    <string name="mock_display_name">Ella Gliksberg</string>
+    <string name="mock_username">@ella_cooks</string>
+    <string name="mock_bio">Recipe lover sharing quick and healthy Mediterranean dishes.</string>
+    <string name="profile_edit_button">Edit profile</string>
+    <string name="profile_save_button">Save</string>
+    <string name="profile_cancel_button">Cancel</string>
+    <string name="profile_label_name">Name</string>
+    <string name="profile_label_username">Username</string>
+    <string name="profile_label_bio">Bio</string>
+    <string name="profile_syncing">Syncing profile...</string>
 </resources>

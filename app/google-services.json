@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "428042637979",
+    "project_id": "piatto-project",
+    "storage_bucket": "piatto-project.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:428042637979:android:14ad6b7dbbb10e131f2c3e",
+        "android_client_info": {
+          "package_name": "com.example.piattoproject"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbxip6TR4rKe63qhnfMUZz3SixzDYqIYk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
