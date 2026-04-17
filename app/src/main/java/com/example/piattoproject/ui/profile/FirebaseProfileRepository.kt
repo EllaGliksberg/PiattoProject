@@ -1,5 +1,6 @@
 package com.example.piattoproject.ui.profile
 
+import com.example.piattoproject.ui.profile.FirebaseProfile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore

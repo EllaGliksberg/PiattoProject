@@ -15,7 +15,7 @@ class MainActivity : AppCompatActivity() {
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                .replace(R.id.profileFragmentContainer, ProfileFragment())
+                .replace(R.id.profileFragmentContainer, FeedFragment())
                 .commit()
         }
 
