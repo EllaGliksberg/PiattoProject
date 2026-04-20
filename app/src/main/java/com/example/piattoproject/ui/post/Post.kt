@@ -5,13 +5,10 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "posts")
 data class Post(
-    @PrimaryKey
-    val id: String,
-    var recipeTitle: String,
-    var description: String,
-    var imageUrl: String,
-    var creatorName: String,
-    var latitude: Double = 0.0,
-    var longitude: Double = 0.0,
-    var lastUpdated: Long = 0L
+    @PrimaryKey val id: String,
+    val recipeTitle: String,
+    val description: String,
+    val imageUrl: String,
+    val creatorName: String,
+    val lastUpdated: Long = System.currentTimeMillis()
 )

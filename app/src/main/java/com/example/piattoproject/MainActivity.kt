@@ -5,9 +5,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.piattoproject.ui.profile.ProfileFragment
 import com.example.piattoproject.ui.post.AppLocalDbRepository
 import com.example.piattoproject.ui.post.Post
+import com.example.piattoproject.ui.post.FeedFragment
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,24 +19,19 @@ class MainActivity : AppCompatActivity() {
 
         val testPost = Post(
             id = "1",
-            recipeTitle = "Pasta Pomodoro",
-            description = "Grandma's secret Italian recipe",
-            imageUrl = "https://example.com/pasta.jpg",
-            creatorName = "Noa",
-            latitude = 32.0853,
-            longitude = 34.7818
+            recipeTitle = "Classic Pasta Pomodoro",
+            description = "Fresh basil, tomatoes, and extra virgin olive oil. A true Italian classic.",
+            imageUrl = "https://www.haaretz.co.il/magazine/the-edge/2019-11-20/ty-article-magazine/.premium/0000017f-e156-d7b2-a77f-e357fe330000",
+            creatorName = "Noa"
         )
 
         Thread {
             db.postDao().insert(testPost)
-
-            val allPosts = db.postDao().getAll()
-            println("✅ Room Test: Found ${allPosts.size} posts in database")
         }.start()
 
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                .replace(R.id.profileFragmentContainer, ProfileFragment())
+                .replace(R.id.profileFragmentContainer, FeedFragment())
                 .commit()
         }
 
