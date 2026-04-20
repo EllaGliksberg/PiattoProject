@@ -4,14 +4,12 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="20dp">
-
     <EditText
         android:id="@+id/editPostTitle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="Recipe Title"
         android:inputType="text" />
-
     <EditText
         android:id="@+id/editPostDescription"
         android:layout_width="match_parent"
@@ -21,7 +19,6 @@
         android:gravity="top"
         android:inputType="textMultiLine"
         android:lines="4" />
-
     <EditText
         android:id="@+id/editPostImageUrl"
         android:layout_width="match_parent"
@@ -29,7 +26,6 @@
         android:layout_marginTop="12dp"
         android:hint="Image URL (temporary)"
         android:inputType="textUri" />
-
     <Button
         android:id="@+id/savePostBtn"
         android:layout_width="match_parent"

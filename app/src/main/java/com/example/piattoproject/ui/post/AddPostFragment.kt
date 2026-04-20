@@ -43,15 +43,12 @@ class AddPostFragment : Fragment() {
                 lastUpdated = System.currentTimeMillis()
             )
 
-            // שמירה ל-Firebase
             FirebaseFirestore.getInstance().collection("posts").document(id).set(newPost)
                 .addOnSuccessListener {
-                    // שמירה ל-Room המקומי
                     Thread {
                         AppLocalDbRepository.getInstance(requireContext()).postDao().insert(newPost)
                         activity?.runOnUiThread {
                             Toast.makeText(context, "Post added successfully!", Toast.LENGTH_SHORT).show()
-                            // פקודת החזרה למסך הקודם (הפיד)
                             parentFragmentManager.popBackStack()
                         }
                     }.start()
@@ -61,7 +58,6 @@ class AddPostFragment : Fragment() {
                 }
         }
     }
-
     override fun onDestroyView() {
         super.onDestroyView()
         _binding = null
