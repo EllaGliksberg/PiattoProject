@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_graph.xml"
+    app:startDestination="@id/fragment_profile">
+
+    <action
+        android:id="@+id/action_logout"
+        app:destination="@id/fragment_login"/>
+
+    <action
+        android:id="@+id/action_global_feed"
+        app:destination="@id/fragment_feed"/>
+
+    <fragment
+        android:id="@+id/fragment_login"
+        android:name="com.example.piattoproject.ui.login.LoginFragment"
+        android:label="Login">
+        <action
+            android:id="@+id/action_login_to_feed"
+            app:destination="@id/fragment_feed"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_feed"
+        android:name="com.example.piattoproject.ui.feed.FeedFragment"
+        android:label="Feed" >
+        <action
+            android:id="@+id/action_feed_to_profile"
+            app:destination="@id/fragment_profile"/>
+        <action
+            android:id="@+id/action_feed_to_postDetails"
+            app:destination="@id/fragment_post_details"/>
+        <action
+            android:id="@+id/action_feed_to_createPost"
+            app:destination="@id/fragment_create_post"/>
+        <action
+            android:id="@+id/action_feed_to_map"
+            app:destination="@id/fragment_map"/>
+        <action
+            android:id="@+id/action_feed_to_externalRecipes"
+            app:destination="@id/fragment_external_recipes"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_profile"
+        android:name="com.example.piattoproject.ui.profile.ProfileFragment"
+        android:label="Profile">
+        <action
+            android:id="@+id/action_fragment_profile_to_fragment_post_details"
+            app:destination="@id/fragment_post_details" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_post_details"
+        android:name="com.example.piattoproject.ui.postdetails.PostDetailsFragment"
+        android:label="Post Details">
+        <argument
+            android:name="postId"
+            app:argType="string"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_create_post"
+        android:name="com.example.piattoproject.ui.createpost.CreatePostFragment"
+        android:label="Create Post"/>
+
+    <fragment
+        android:id="@+id/fragment_map"
+        android:name="com.example.piattoproject.ui.map.MapFragment"
+        android:label="Map">
+        <action
+            android:id="@+id/action_map_to_postDetails"
+            app:destination="@id/fragment_post_details"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_external_recipes"
+        android:name="com.example.piattoproject.ui.externalrecipes.ExternalRecipesFragment"
+        android:label="External Recipes"/>
+
+</navigation>
