@@ -8,12 +8,29 @@ import androidx.core.view.WindowInsetsCompat
 import com.example.piattoproject.ui.auth.AuthFragment
 import com.example.piattoproject.ui.profile.ProfileFragment
 import com.google.firebase.auth.FirebaseAuth
+import com.example.piattoproject.ui.post.AppLocalDbRepository
+import com.example.piattoproject.ui.post.Post
+import com.example.piattoproject.ui.post.FeedFragment
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+
+        val db = AppLocalDbRepository.getInstance(this)
+
+        val testPost = Post(
+            id = "1",
+            recipeTitle = "Classic Pasta Pomodoro",
+            description = "Fresh basil, tomatoes, and extra virgin olive oil. A true Italian classic.",
+            imageUrl = "https://www.haaretz.co.il/magazine/the-edge/2019-11-20/ty-article-magazine/.premium/0000017f-e156-d7b2-a77f-e357fe330000",
+            creatorName = "Noa"
+        )
+
+        Thread {
+            db.postDao().insert(testPost)
+        }.start()
 
         if (savedInstanceState == null) {
             val startFragment = if (FirebaseAuth.getInstance().currentUser == null) {
@@ -23,6 +40,7 @@ class MainActivity : AppCompatActivity() {
             }
             supportFragmentManager.beginTransaction()
                 .replace(R.id.profileFragmentContainer, startFragment)
+                .replace(R.id.profileFragmentContainer, FeedFragment())
                 .commit()
         }
 
