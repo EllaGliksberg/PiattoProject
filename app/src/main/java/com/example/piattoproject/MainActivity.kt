@@ -5,6 +5,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.piattoproject.ui.auth.AuthFragment
+import com.example.piattoproject.ui.profile.ProfileFragment
+import com.google.firebase.auth.FirebaseAuth
 import com.example.piattoproject.ui.post.AppLocalDbRepository
 import com.example.piattoproject.ui.post.Post
 import com.example.piattoproject.ui.post.FeedFragment
@@ -30,7 +33,13 @@ class MainActivity : AppCompatActivity() {
         }.start()
 
         if (savedInstanceState == null) {
+            val startFragment = if (FirebaseAuth.getInstance().currentUser == null) {
+                AuthFragment()
+            } else {
+                ProfileFragment()
+            }
             supportFragmentManager.beginTransaction()
+                .replace(R.id.profileFragmentContainer, startFragment)
                 .replace(R.id.profileFragmentContainer, FeedFragment())
                 .commit()
         }
