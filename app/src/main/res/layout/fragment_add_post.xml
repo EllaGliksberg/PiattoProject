@@ -31,6 +31,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
-        android:text="Post Recipe" />
+        android:text="@string/add_post_post_recipe" />
 
 </LinearLayout>

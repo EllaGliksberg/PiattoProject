@@ -19,6 +19,8 @@ class ProfileMockDataSource {
             displayNameError = null,
             usernameError = null,
             errorMessage = null,
+            myPosts = emptyList(),
+            isLoadingMyPosts = false,
         )
     }
 }

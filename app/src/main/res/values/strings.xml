@@ -29,4 +29,16 @@
     <string name="profile_label_username">Username</string>
     <string name="profile_label_bio">Bio</string>
     <string name="profile_syncing">Syncing profile...</string>
+    <string name="profile_my_posts_section">My posts</string>
+    <string name="profile_no_posts_yet">No posts yet</string>
+    <string name="profile_post_thumbnail_content_description">Post image</string>
+    <string name="profile_post_menu_content_description">Post options</string>
+    <string name="profile_post_menu_edit">Edit</string>
+    <string name="profile_post_menu_delete">Delete</string>
+    <string name="profile_post_delete_title">Delete post?</string>
+    <string name="profile_post_delete_message">This cannot be undone.</string>
+    <string name="profile_post_delete_confirm">Delete</string>
+    <string name="add_post_save_changes">Save changes</string>
+    <string name="add_post_post_recipe">Post recipe</string>
+    <string name="post_updated_success">Post updated</string>
 </resources>

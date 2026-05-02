@@ -1,5 +1,7 @@
 package com.example.piattoproject.ui.profile
 
+import com.example.piattoproject.ui.post.Post
+
 data class ProfileUiState(
     val displayName: String,
     val username: String,
@@ -14,4 +16,6 @@ data class ProfileUiState(
     val displayNameError: String?,
     val usernameError: String?,
     val errorMessage: String?,
+    val myPosts: List<Post>,
+    val isLoadingMyPosts: Boolean,
 )
