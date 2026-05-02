@@ -7,7 +7,6 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentFeedBinding
 
 class FeedFragment : Fragment() {
@@ -26,13 +25,6 @@ class FeedFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         viewModel = ViewModelProvider(this)[PostViewModel::class.java]
-
-        binding.addPostBtn.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.profileFragmentContainer, AddPostFragment())
-                .addToBackStack(null)
-                .commit()
-        }
 
         binding.postsRecyclerView.layoutManager = LinearLayoutManager(context)
         adapter = PostRecyclerAdapter(emptyList())

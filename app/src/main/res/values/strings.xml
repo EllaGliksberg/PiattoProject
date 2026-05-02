@@ -1,5 +1,10 @@
 <resources>
-    <string name="app_name">PiattoProject</string>
+    <string name="app_name">Piatto</string>
+    <string name="nav_app_name">Piatto</string>
+    <string name="nav_feed">Feed</string>
+    <string name="nav_upload">Upload</string>
+    <string name="nav_profile">My profile</string>
+    <string name="nav_logout">Logout</string>
     <string name="auth_login_title">Welcome back</string>
     <string name="auth_login_subtitle">Sign in to continue</string>
     <string name="auth_register_title">Create your account</string>
