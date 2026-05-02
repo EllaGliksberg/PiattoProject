@@ -8,6 +8,13 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavController
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.example.piattoproject.ui.auth.AuthFragment
+import com.example.piattoproject.ui.profile.ProfileFragment
+import com.google.firebase.auth.FirebaseAuth
+import com.example.piattoproject.ui.post.AppLocalDbRepository
+import com.example.piattoproject.ui.post.Post
+import com.example.piattoproject.ui.post.FeedFragment
+
 class MainActivity : AppCompatActivity() {
 
     private lateinit var navController: NavController

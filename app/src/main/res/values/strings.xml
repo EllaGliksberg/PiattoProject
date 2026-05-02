@@ -1,5 +1,17 @@
 <resources>
     <string name="app_name">PiattoProject</string>
+    <string name="auth_login_title">Welcome back</string>
+    <string name="auth_login_subtitle">Sign in to continue</string>
+    <string name="auth_register_title">Create your account</string>
+    <string name="auth_register_subtitle">Register to use the app</string>
+    <string name="auth_register_username_hint">Username</string>
+    <string name="auth_email_hint">Email</string>
+    <string name="auth_password_hint">Password</string>
+    <string name="auth_confirm_password_hint">Confirm password</string>
+    <string name="auth_login_button">Login</string>
+    <string name="auth_register_button">Register</string>
+    <string name="auth_switch_to_register">Need an account? Register</string>
+    <string name="auth_switch_to_login">Already have an account? Login</string>
     <string name="profile_title">Profile</string>
     <string name="profile_photo_content_description">Profile photo</string>
     <string name="mock_display_name">Ella Gliksberg</string>
