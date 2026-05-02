@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentFeedBinding
@@ -28,10 +29,7 @@ class FeedFragment : Fragment() {
         viewModel = ViewModelProvider(this)[PostViewModel::class.java]
 
         binding.addPostBtn.setOnClickListener {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.profileFragmentContainer, AddPostFragment())
-                .addToBackStack(null)
-                .commit()
+            findNavController().navigate(R.id.action_feed_to_addPost)
         }
 
         binding.postsRecyclerView.layoutManager = LinearLayoutManager(context)

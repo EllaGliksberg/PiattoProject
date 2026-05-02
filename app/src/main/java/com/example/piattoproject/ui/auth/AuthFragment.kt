@@ -7,9 +7,9 @@ import android.view.ViewGroup
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentAuthBinding
-import com.example.piattoproject.ui.profile.ProfileFragment
 import com.google.firebase.auth.FirebaseAuth
 import com.google.android.material.snackbar.Snackbar
 
@@ -129,9 +129,7 @@ class AuthFragment : Fragment() {
         }
 
         if (uiState.isAuthenticated && FirebaseAuth.getInstance().currentUser != null) {
-            parentFragmentManager.beginTransaction()
-                .replace(R.id.profileFragmentContainer, ProfileFragment())
-                .commit()
+            findNavController().navigate(R.id.action_auth_to_feed)
         }
     }
 

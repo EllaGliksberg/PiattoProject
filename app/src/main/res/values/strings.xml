@@ -24,4 +24,11 @@
     <string name="profile_label_username">Username</string>
     <string name="profile_label_bio">Bio</string>
     <string name="profile_syncing">Syncing profile...</string>
+
+    <!-- Bottom Navigation Labels -->
+    <string name="bottom_nav_feed">Feed</string>
+    <string name="bottom_nav_create">Create</string>
+    <string name="bottom_nav_profile">Profile</string>
+    <string name="bottom_nav_map">Map</string>
+    <string name="bottom_nav_recipes">Recipes</string>
 </resources>

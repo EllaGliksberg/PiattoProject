@@ -1,19 +1,15 @@
 package com.example.piattoproject
 
 import android.os.Bundle
+import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
-import com.example.piattoproject.ui.auth.AuthFragment
-import com.example.piattoproject.ui.profile.ProfileFragment
-import com.google.firebase.auth.FirebaseAuth
-import com.example.piattoproject.ui.post.AppLocalDbRepository
-import com.example.piattoproject.ui.post.Post
-import com.example.piattoproject.ui.post.FeedFragment
 
 class MainActivity : AppCompatActivity() {
 
@@ -28,19 +24,23 @@ class MainActivity : AppCompatActivity() {
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
         val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+        
+        // Match IDs with nav_graph.xml
         val topLevelDestinations = setOf(
-            R.id.feedFragment,
-            R.id.mapFragment,
-            R.id.createPostFragment,
-            R.id.externalRecipesFragment,
-            R.id.profileFragment
+            R.id.fragment_feed,
+            R.id.fragment_add_post,
+            R.id.fragment_profile
         )
 
         bottomNavigationView.setupWithNavController(navController)
+        
+        // Control BottomNavigationView visibility based on current destination
         navController.addOnDestinationChangedListener { _, destination, _ ->
             bottomNavigationView.visibility = if (destination.id in topLevelDestinations) {
                 View.VISIBLE
-            } else View.GONE
+            } else {
+                View.GONE
+            }
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->

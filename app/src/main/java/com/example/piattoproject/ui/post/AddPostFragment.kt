@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
+import androidx.navigation.fragment.findNavController
 import com.example.piattoproject.databinding.FragmentAddPostBinding
 import com.google.firebase.firestore.FirebaseFirestore
 import java.util.UUID
@@ -49,7 +50,7 @@ class AddPostFragment : Fragment() {
                         AppLocalDbRepository.getInstance(requireContext()).postDao().insert(newPost)
                         activity?.runOnUiThread {
                             Toast.makeText(context, "Post added successfully!", Toast.LENGTH_SHORT).show()
-                            parentFragmentManager.popBackStack()
+                            findNavController().popBackStack()
                         }
                     }.start()
                 }
