@@ -1,46 +1,53 @@
 package com.example.piattoproject
 
 import android.os.Bundle
+import android.view.View
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import com.example.piattoproject.ui.auth.AuthFragment
+import com.example.piattoproject.ui.post.AddPostFragment
+import com.example.piattoproject.ui.post.FeedFragment
 import com.example.piattoproject.ui.profile.ProfileFragment
 import com.google.firebase.auth.FirebaseAuth
-import com.example.piattoproject.ui.post.AppLocalDbRepository
-import com.example.piattoproject.ui.post.Post
-import com.example.piattoproject.ui.post.FeedFragment
 
 class MainActivity : AppCompatActivity() {
+
+    private lateinit var appBarLayout: View
+
+    private val fragmentLifecycleCallbacks =
+        object : FragmentManager.FragmentLifecycleCallbacks() {
+            override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
+                if (f.id != R.id.profileFragmentContainer) return
+                updateToolbarVisibility(f)
+            }
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        val db = AppLocalDbRepository.getInstance(this)
+        appBarLayout = findViewById(R.id.mainAppBarLayout)
+        findViewById<View>(R.id.mainNavFeed).setOnClickListener { navigateToFeed() }
+        findViewById<View>(R.id.mainNavUpload).setOnClickListener { navigateToUpload() }
+        findViewById<View>(R.id.mainNavProfile).setOnClickListener { navigateToProfile() }
+        findViewById<View>(R.id.mainNavLogout).setOnClickListener { logout() }
 
-        val testPost = Post(
-            id = "1",
-            recipeTitle = "Classic Pasta Pomodoro",
-            description = "Fresh basil, tomatoes, and extra virgin olive oil. A true Italian classic.",
-            imageUrl = "https://www.haaretz.co.il/magazine/the-edge/2019-11-20/ty-article-magazine/.premium/0000017f-e156-d7b2-a77f-e357fe330000",
-            creatorName = "Noa"
-        )
-
-        Thread {
-            db.postDao().insert(testPost)
-        }.start()
+        supportFragmentManager.registerFragmentLifecycleCallbacks(fragmentLifecycleCallbacks, true)
 
         if (savedInstanceState == null) {
-            val startFragment = if (FirebaseAuth.getInstance().currentUser == null) {
-                AuthFragment()
-            } else {
-                ProfileFragment()
-            }
+            val startFragment =
+                if (FirebaseAuth.getInstance().currentUser == null) {
+                    AuthFragment()
+                } else {
+                    FeedFragment()
+                }
             supportFragmentManager.beginTransaction()
                 .replace(R.id.profileFragmentContainer, startFragment)
-                .replace(R.id.profileFragmentContainer, FeedFragment())
                 .commit()
         }
 
@@ -49,5 +56,50 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+    }
+
+    override fun onDestroy() {
+        supportFragmentManager.unregisterFragmentLifecycleCallbacks(fragmentLifecycleCallbacks)
+        super.onDestroy()
+    }
+
+    fun navigateToFeed() {
+        clearBackStack()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.profileFragmentContainer, FeedFragment())
+            .commit()
+    }
+
+    fun navigateToProfile() {
+        clearBackStack()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.profileFragmentContainer, ProfileFragment())
+            .commit()
+    }
+
+    fun navigateToUpload() {
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.profileFragmentContainer, AddPostFragment())
+            .addToBackStack(null)
+            .commit()
+    }
+
+    fun logout() {
+        FirebaseAuth.getInstance().signOut()
+        clearBackStack()
+        supportFragmentManager.beginTransaction()
+            .replace(R.id.profileFragmentContainer, AuthFragment())
+            .commit()
+    }
+
+    private fun clearBackStack() {
+        while (supportFragmentManager.backStackEntryCount > 0) {
+            supportFragmentManager.popBackStackImmediate()
+        }
+    }
+
+    private fun updateToolbarVisibility(fragment: Fragment) {
+        val show = fragment !is AuthFragment && FirebaseAuth.getInstance().currentUser != null
+        appBarLayout.visibility = if (show) View.VISIBLE else View.GONE
     }
 }
