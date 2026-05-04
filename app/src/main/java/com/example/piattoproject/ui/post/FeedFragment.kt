@@ -29,11 +29,20 @@ class FeedFragment : Fragment() {
         viewModel = ViewModelProvider(this)[PostViewModel::class.java]
 
         binding.addPostBtn.setOnClickListener {
+            // Navigate using the action defined in nav_graph.xml
             findNavController().navigate(R.id.action_feed_to_addPost)
         }
 
         binding.postsRecyclerView.layoutManager = LinearLayoutManager(context)
-        adapter = PostRecyclerAdapter(emptyList())
+        
+        // Initialize adapter with a click listener to navigate to Post Details
+        adapter = PostRecyclerAdapter(emptyList()) { post ->
+            val bundle = Bundle().apply {
+                putString("postId", post.id)
+            }
+            findNavController().navigate(R.id.action_feed_to_post_details, bundle)
+        }
+        
         binding.postsRecyclerView.adapter = adapter
 
         viewModel.posts.observe(viewLifecycleOwner) { updatedPosts ->

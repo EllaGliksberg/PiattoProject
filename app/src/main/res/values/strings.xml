@@ -1,5 +1,11 @@
 <resources>
-    <string name="app_name">PiattoProject</string>
+    <string name="app_name">Piatto</string>
+    <string name="nav_app_name">Piatto</string>
+    <string name="nav_feed">Feed</string>
+    <string name="nav_upload">Upload</string>
+    <string name="nav_profile">My profile</string>
+    <string name="nav_logout">Logout</string>
+
     <string name="auth_login_title">Welcome back</string>
     <string name="auth_login_subtitle">Sign in to continue</string>
     <string name="auth_register_title">Create your account</string>
@@ -12,6 +18,7 @@
     <string name="auth_register_button">Register</string>
     <string name="auth_switch_to_register">Need an account? Register</string>
     <string name="auth_switch_to_login">Already have an account? Login</string>
+
     <string name="profile_title">Profile</string>
     <string name="profile_photo_content_description">Profile photo</string>
     <string name="mock_display_name">Ella Gliksberg</string>
@@ -25,7 +32,7 @@
     <string name="profile_label_bio">Bio</string>
     <string name="profile_syncing">Syncing profile...</string>
 
-    <!-- Bottom Navigation Labels -->
+    <!-- Navigation Labels (compatibility) -->
     <string name="bottom_nav_feed">Feed</string>
     <string name="bottom_nav_create">Create</string>
     <string name="bottom_nav_profile">Profile</string>

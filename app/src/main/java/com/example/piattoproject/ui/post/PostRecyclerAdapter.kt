@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.piattoproject.databinding.PostListRowBinding
 
-class PostRecyclerAdapter(var posts: List<Post>) :
+class PostRecyclerAdapter(var posts: List<Post>, private val onPostClick: (Post) -> Unit) :
     RecyclerView.Adapter<PostRecyclerAdapter.PostViewHolder>() {
 
     class PostViewHolder(val binding: PostListRowBinding) : RecyclerView.ViewHolder(binding.root)
@@ -20,6 +20,10 @@ class PostRecyclerAdapter(var posts: List<Post>) :
         holder.binding.postTitle.text = post.recipeTitle
         holder.binding.postDescription.text = post.description
         holder.binding.postAuthor.text = "By ${post.creatorName}"
+        
+        holder.itemView.setOnClickListener {
+            onPostClick(post)
+        }
     }
 
     override fun getItemCount() = posts.size

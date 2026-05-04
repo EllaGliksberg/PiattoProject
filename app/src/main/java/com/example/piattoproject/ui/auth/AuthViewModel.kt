@@ -5,6 +5,7 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import kotlinx.coroutines.launch
 
@@ -13,6 +14,17 @@ class AuthViewModel(
 ) : ViewModel() {
     private val _authUiState = MutableLiveData(AuthUiState())
     val authUiState: LiveData<AuthUiState> = _authUiState
+
+    init {
+        // Check if user is already authenticated on start
+        checkCurrentUser()
+    }
+
+    private fun checkCurrentUser() {
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            _authUiState.value = AuthUiState(isAuthenticated = true)
+        }
+    }
 
     fun onModeToggleClicked() {
         val currentState = _authUiState.value ?: AuthUiState()

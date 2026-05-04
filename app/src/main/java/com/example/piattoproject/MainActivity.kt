@@ -10,6 +10,7 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
 
@@ -23,20 +24,27 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
-        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
         
-        // Match IDs with nav_graph.xml
-        val topLevelDestinations = setOf(
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+        bottomNavigationView.setupWithNavController(navController)
+
+        // Redirect to Login if no user session is found
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            navController.navigate(R.id.fragment_auth) {
+                popUpTo(R.id.nav_graph) { inclusive = true }
+            }
+        }
+
+        // Destinations where the Bottom Navigation should be visible
+        val bottomNavDestinations = setOf(
             R.id.fragment_feed,
+            R.id.fragment_map,
             R.id.fragment_add_post,
             R.id.fragment_profile
         )
 
-        bottomNavigationView.setupWithNavController(navController)
-        
-        // Control BottomNavigationView visibility based on current destination
         navController.addOnDestinationChangedListener { _, destination, _ ->
-            bottomNavigationView.visibility = if (destination.id in topLevelDestinations) {
+            bottomNavigationView.visibility = if (destination.id in bottomNavDestinations) {
                 View.VISIBLE
             } else {
                 View.GONE
@@ -48,5 +56,10 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+    }
+
+    fun performLogout() {
+        FirebaseAuth.getInstance().signOut()
+        navController.navigate(R.id.action_global_logout)
     }
 }
