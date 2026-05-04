@@ -8,6 +8,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import com.example.piattoproject.MainActivity
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentAuthBinding
 import com.google.firebase.auth.FirebaseAuth

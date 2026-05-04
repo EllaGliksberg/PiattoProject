@@ -1,20 +1,63 @@
 package com.example.piattoproject.ui.profile
 
+import android.content.Context
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.piattoproject.ui.post.AppLocalDbRepository
+import com.example.piattoproject.ui.post.Post
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class ProfileViewModel(
     private val profileImageLocalStore: ProfileImageLocalStore,
+    private val appContext: Context,
     private val repository: FirebaseProfileRepository = FirebaseProfileRepository(),
+    private val userPostsRepository: FirebaseUserPostsRepository = FirebaseUserPostsRepository(),
 ) : ViewModel() {
     private val _profileUiState = MutableLiveData(createInitialState())
     val profileUiState: LiveData<ProfileUiState> = _profileUiState
 
     init {
         loadProfile()
+    }
+
+    fun refreshMyPosts() {
+        val current = _profileUiState.value ?: createInitialState()
+        _profileUiState.value = current.copy(isLoadingMyPosts = true)
+        viewModelScope.launch {
+            runCatching { userPostsRepository.loadPostsForSignedInUser() }
+                .onSuccess { posts ->
+                    val state = _profileUiState.value ?: return@launch
+                    _profileUiState.value = state.copy(myPosts = posts, isLoadingMyPosts = false)
+                }
+                .onFailure {
+                    val state = _profileUiState.value ?: return@launch
+                    _profileUiState.value = state.copy(isLoadingMyPosts = false)
+                }
+        }
+    }
+
+    fun deletePost(post: Post) {
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.IO) {
+                    userPostsRepository.deletePostForCurrentUser(post.id)
+                    AppLocalDbRepository.getInstance(appContext).postDao().deleteById(post.id)
+                }
+            }.onSuccess {
+                val state = _profileUiState.value ?: return@launch
+                _profileUiState.value = state.copy(
+                    myPosts = state.myPosts.filter { it.id != post.id },
+                )
+            }.onFailure {
+                _profileUiState.value = (_profileUiState.value ?: return@launch).copy(
+                    errorMessage = "Could not delete post. Please try again.",
+                )
+            }
+        }
     }
 
     private fun loadProfile() {
@@ -125,10 +168,12 @@ class ProfileViewModel(
                     bio = bio,
                 )
             }.onSuccess { savedProfile ->
+                val prevPosts = _profileUiState.value?.myPosts ?: currentState.myPosts
+                val prevLoadingPosts = _profileUiState.value?.isLoadingMyPosts ?: currentState.isLoadingMyPosts
                 _profileUiState.value = createLoadedState(
                     profile = savedProfile,
                     localImageUri = currentState.profileImageUri,
-                )
+                ).copy(myPosts = prevPosts, isLoadingMyPosts = prevLoadingPosts)
             }.onFailure {
                 _profileUiState.value = currentState.copy(
                     isSaving = false,
@@ -207,10 +252,13 @@ class ProfileViewModel(
             displayNameError = null,
             usernameError = null,
             errorMessage = null,
+            myPosts = emptyList(),
+            isLoadingMyPosts = false,
         )
     }
 
     private fun createLoadedState(profile: FirebaseProfile, localImageUri: String?): ProfileUiState {
+        val previous = _profileUiState.value
         return ProfileUiState(
             displayName = profile.fullName,
             username = profile.username,
@@ -225,6 +273,8 @@ class ProfileViewModel(
             displayNameError = null,
             usernameError = null,
             errorMessage = null,
+            myPosts = previous?.myPosts ?: emptyList(),
+            isLoadingMyPosts = previous?.isLoadingMyPosts ?: false,
         )
     }
 }

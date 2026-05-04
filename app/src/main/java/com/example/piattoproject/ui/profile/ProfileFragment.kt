@@ -12,14 +12,21 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import androidx.appcompat.widget.PopupMenu
+import androidx.core.os.bundleOf
+import androidx.recyclerview.widget.GridLayoutManager
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentProfileBinding
+import com.example.piattoproject.ui.post.AddPostFragment
+import com.example.piattoproject.ui.post.Post
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 
 class ProfileFragment : Fragment() {
     private var binding: FragmentProfileBinding? = null
     private lateinit var profileViewModel: ProfileViewModel
+    private lateinit var myPostsAdapter: ProfilePostsGridAdapter
     private val pickProfileImage = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) {
             return@registerForActivityResult
@@ -45,9 +52,24 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        val viewBinding = binding ?: return
         profileViewModel = ViewModelProvider(this, ProfileViewModelFactory())[ProfileViewModel::class.java]
+        myPostsAdapter = ProfilePostsGridAdapter { post, anchor ->
+            showPostActionsMenu(post, anchor)
+        }
+        val gridLayoutManager = GridLayoutManager(requireContext(), 2)
+        viewBinding.myPostsRecyclerView.layoutManager = gridLayoutManager
+        viewBinding.myPostsRecyclerView.adapter = myPostsAdapter
+        viewBinding.myPostsRecyclerView.isNestedScrollingEnabled = false
         setupListeners()
         observeProfileUiState()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::profileViewModel.isInitialized) {
+            profileViewModel.refreshMyPosts()
+        }
     }
 
     override fun onDestroyView() {
@@ -59,6 +81,53 @@ class ProfileFragment : Fragment() {
         profileViewModel.profileUiState.observe(viewLifecycleOwner) { uiState ->
             bindProfileUiState(uiState)
         }
+    }
+
+    private fun showPostActionsMenu(post: Post, anchor: View) {
+        val popup = PopupMenu(requireContext(), anchor)
+        popup.menuInflater.inflate(R.menu.profile_post_item_menu, popup.menu)
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.profile_post_menu_edit -> {
+                    openEditPost(post)
+                    true
+                }
+                R.id.profile_post_menu_delete -> {
+                    showDeletePostConfirmation(post)
+                    true
+                }
+                else -> false
+            }
+        }
+        popup.show()
+    }
+
+    private fun openEditPost(post: com.example.piattoproject.ui.post.Post) {
+        val fragment = AddPostFragment().apply {
+            arguments = bundleOf(
+                AddPostFragment.ARG_POST_ID to post.id,
+                AddPostFragment.ARG_RECIPE_TITLE to post.recipeTitle,
+                AddPostFragment.ARG_DESCRIPTION to post.description,
+                AddPostFragment.ARG_IMAGE_URL to post.imageUrl,
+                AddPostFragment.ARG_CREATOR_NAME to post.creatorName,
+                AddPostFragment.ARG_CREATOR_UID to post.creatorUid,
+            )
+        }
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.profileFragmentContainer, fragment)
+            .addToBackStack(null)
+            .commit()
+    }
+
+    private fun showDeletePostConfirmation(post: Post) {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle(R.string.profile_post_delete_title)
+            .setMessage(R.string.profile_post_delete_message)
+            .setNegativeButton(R.string.profile_cancel_button, null)
+            .setPositiveButton(R.string.profile_post_delete_confirm) { _, _ ->
+                profileViewModel.deletePost(post)
+            }
+            .show()
     }
 
     private fun setupListeners() {
@@ -109,6 +178,12 @@ class ProfileFragment : Fragment() {
         viewBinding.profileEditModeLayout.visibility = if (uiState.isEditing) View.VISIBLE else View.GONE
         viewBinding.editModeActionsLayout.visibility = if (uiState.isEditing) View.VISIBLE else View.GONE
         viewBinding.profileStatsLayout.visibility = if (uiState.isEditing) View.GONE else View.VISIBLE
+
+        viewBinding.postsCountTextView.text = uiState.myPosts.size.toString()
+        myPostsAdapter.submitList(uiState.myPosts)
+        val showEmptyMyPosts = uiState.myPosts.isEmpty() && !uiState.isLoadingMyPosts
+        viewBinding.myPostsEmptyTextView.visibility = if (showEmptyMyPosts) View.VISIBLE else View.GONE
+        viewBinding.myPostsRecyclerView.visibility = if (uiState.myPosts.isNotEmpty()) View.VISIBLE else View.GONE
 
         updateEditTextIfDifferent(viewBinding.displayNameEditText.text?.toString(), uiState.editedDisplayName) {
             viewBinding.displayNameEditText.setText(uiState.editedDisplayName)
@@ -166,6 +241,7 @@ class ProfileFragment : Fragment() {
                 @Suppress("UNCHECKED_CAST")
                 return ProfileViewModel(
                     profileImageLocalStore = ProfileImageLocalStore(requireContext().applicationContext),
+                    appContext = requireContext().applicationContext,
                 ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")

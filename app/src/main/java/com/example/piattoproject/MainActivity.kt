@@ -10,6 +10,12 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import com.example.piattoproject.ui.auth.AuthFragment
+import com.example.piattoproject.ui.post.AddPostFragment
+import com.example.piattoproject.ui.post.FeedFragment
+import com.example.piattoproject.ui.profile.ProfileFragment
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {

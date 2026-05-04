@@ -10,5 +10,6 @@ data class Post(
     val description: String,
     val imageUrl: String,
     val creatorName: String,
-    val lastUpdated: Long = System.currentTimeMillis()
+    val creatorUid: String = "",
+    val lastUpdated: Long = System.currentTimeMillis(),
 )
