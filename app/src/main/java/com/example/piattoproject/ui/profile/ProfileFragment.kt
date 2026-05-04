@@ -11,6 +11,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.appcompat.widget.PopupMenu
 import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.GridLayoutManager
@@ -20,6 +21,7 @@ import com.example.piattoproject.ui.post.AddPostFragment
 import com.example.piattoproject.ui.post.Post
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
+import com.google.firebase.auth.FirebaseAuth
 
 class ProfileFragment : Fragment() {
     private var binding: FragmentProfileBinding? = null
@@ -139,6 +141,9 @@ class ProfileFragment : Fragment() {
         viewBinding.saveProfileButton.setOnClickListener {
             profileViewModel.onSaveClicked()
         }
+        viewBinding.logoutButton.setOnClickListener {
+            logout()
+        }
         viewBinding.profileImageView.setOnClickListener {
             pickProfileImage.launch(arrayOf("image/*"))
         }
@@ -151,6 +156,11 @@ class ProfileFragment : Fragment() {
         viewBinding.bioEditText.doAfterTextChanged { text ->
             profileViewModel.onEditedBioChanged(text?.toString().orEmpty())
         }
+    }
+
+    private fun logout() {
+        FirebaseAuth.getInstance().signOut()
+        findNavController().navigate(R.id.action_global_logout)
     }
 
     private fun bindProfileUiState(uiState: ProfileUiState) {
@@ -191,6 +201,7 @@ class ProfileFragment : Fragment() {
         viewBinding.saveProfileButton.isEnabled = isInteractionEnabled
         viewBinding.editProfileButton.isEnabled = isInteractionEnabled
         viewBinding.cancelEditButton.isEnabled = isInteractionEnabled
+        viewBinding.logoutButton.isEnabled = isInteractionEnabled
         viewBinding.profileImageView.isEnabled = isInteractionEnabled
 
         if (!uiState.errorMessage.isNullOrBlank()) {

@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+recipe_social_app_context_guidelines.md
+/helpers

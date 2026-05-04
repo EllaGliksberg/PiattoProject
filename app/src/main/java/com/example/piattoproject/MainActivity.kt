@@ -6,6 +6,10 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.navigation.NavController
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import com.example.piattoproject.ui.auth.AuthFragment
@@ -16,39 +20,41 @@ import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var appBarLayout: View
-
-    private val fragmentLifecycleCallbacks =
-        object : FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
-                if (f.id != R.id.profileFragmentContainer) return
-                updateToolbarVisibility(f)
-            }
-        }
+    private lateinit var navController: NavController
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
-        appBarLayout = findViewById(R.id.mainAppBarLayout)
-        findViewById<View>(R.id.mainNavFeed).setOnClickListener { navigateToFeed() }
-        findViewById<View>(R.id.mainNavUpload).setOnClickListener { navigateToUpload() }
-        findViewById<View>(R.id.mainNavProfile).setOnClickListener { navigateToProfile() }
-        findViewById<View>(R.id.mainNavLogout).setOnClickListener { logout() }
+        val navHostFragment = supportFragmentManager
+            .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        navController = navHostFragment.navController
+        
+        val bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottomNavigationView)
+        bottomNavigationView.setupWithNavController(navController)
 
-        supportFragmentManager.registerFragmentLifecycleCallbacks(fragmentLifecycleCallbacks, true)
+        // Redirect to Login if no user session is found
+        if (FirebaseAuth.getInstance().currentUser == null) {
+            navController.navigate(R.id.fragment_auth) {
+                popUpTo(R.id.nav_graph) { inclusive = true }
+            }
+        }
 
-        if (savedInstanceState == null) {
-            val startFragment =
-                if (FirebaseAuth.getInstance().currentUser == null) {
-                    AuthFragment()
-                } else {
-                    FeedFragment()
-                }
-            supportFragmentManager.beginTransaction()
-                .replace(R.id.profileFragmentContainer, startFragment)
-                .commit()
+        // Destinations where the Bottom Navigation should be visible
+        val bottomNavDestinations = setOf(
+            R.id.fragment_feed,
+            R.id.fragment_map,
+            R.id.fragment_add_post,
+            R.id.fragment_profile
+        )
+
+        navController.addOnDestinationChangedListener { _, destination, _ ->
+            bottomNavigationView.visibility = if (destination.id in bottomNavDestinations) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
         }
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -58,48 +64,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() {
-        supportFragmentManager.unregisterFragmentLifecycleCallbacks(fragmentLifecycleCallbacks)
-        super.onDestroy()
-    }
-
-    fun navigateToFeed() {
-        clearBackStack()
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.profileFragmentContainer, FeedFragment())
-            .commit()
-    }
-
-    fun navigateToProfile() {
-        clearBackStack()
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.profileFragmentContainer, ProfileFragment())
-            .commit()
-    }
-
-    fun navigateToUpload() {
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.profileFragmentContainer, AddPostFragment())
-            .addToBackStack(null)
-            .commit()
-    }
-
-    fun logout() {
+    fun performLogout() {
         FirebaseAuth.getInstance().signOut()
-        clearBackStack()
-        supportFragmentManager.beginTransaction()
-            .replace(R.id.profileFragmentContainer, AuthFragment())
-            .commit()
-    }
-
-    private fun clearBackStack() {
-        while (supportFragmentManager.backStackEntryCount > 0) {
-            supportFragmentManager.popBackStackImmediate()
-        }
-    }
-
-    private fun updateToolbarVisibility(fragment: Fragment) {
-        val show = fragment !is AuthFragment && FirebaseAuth.getInstance().currentUser != null
-        appBarLayout.visibility = if (show) View.VISIBLE else View.GONE
+        navController.navigate(R.id.action_global_logout)
     }
 }
