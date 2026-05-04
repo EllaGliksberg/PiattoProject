@@ -22,15 +22,7 @@ class PostViewModel(application: Application) : AndroidViewModel(application) {
             .addOnSuccessListener { documents ->
                 val postList = mutableListOf<Post>()
                 for (document in documents) {
-                    val post = Post(
-                        id = document.id,
-                        recipeTitle = document.getString("recipeTitle") ?: "",
-                        description = document.getString("description") ?: "",
-                        imageUrl = document.getString("imageUrl") ?: "",
-                        creatorName = document.getString("creatorName") ?: "",
-                        lastUpdated = document.getLong("lastUpdated") ?: 0L
-                    )
-                    postList.add(post)
+                    postList.add(document.toPost())
                 }
 
                 Thread {
