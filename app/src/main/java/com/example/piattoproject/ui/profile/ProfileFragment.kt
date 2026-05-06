@@ -102,21 +102,16 @@ class ProfileFragment : Fragment() {
         popup.show()
     }
 
-    private fun openEditPost(post: com.example.piattoproject.ui.post.Post) {
-        val fragment = AddPostFragment().apply {
-            arguments = bundleOf(
-                AddPostFragment.ARG_POST_ID to post.id,
-                AddPostFragment.ARG_RECIPE_TITLE to post.recipeTitle,
-                AddPostFragment.ARG_DESCRIPTION to post.description,
-                AddPostFragment.ARG_IMAGE_URL to post.imageUrl,
-                AddPostFragment.ARG_CREATOR_NAME to post.creatorName,
-                AddPostFragment.ARG_CREATOR_UID to post.creatorUid,
-            )
-        }
-        parentFragmentManager.beginTransaction()
-            .replace(R.id.profileFragmentContainer, fragment)
-            .addToBackStack(null)
-            .commit()
+    private fun openEditPost(post: Post) {
+        val bundle = bundleOf(
+            AddPostFragment.ARG_POST_ID to post.id,
+            AddPostFragment.ARG_RECIPE_TITLE to post.recipeTitle,
+            AddPostFragment.ARG_DESCRIPTION to post.description,
+            AddPostFragment.ARG_IMAGE_URL to post.imageUrl,
+            AddPostFragment.ARG_CREATOR_NAME to post.creatorName,
+            AddPostFragment.ARG_CREATOR_UID to post.creatorUid,
+        )
+        findNavController().navigate(R.id.action_profile_to_addPost, bundle)
     }
 
     private fun showDeletePostConfirmation(post: Post) {
