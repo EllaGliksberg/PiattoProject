@@ -16,6 +16,8 @@ import androidx.fragment.app.Fragment
 
 import androidx.lifecycle.lifecycleScope
 
+import androidx.navigation.fragment.navArgs
+
 import com.example.piattoproject.R
 
 import com.example.piattoproject.databinding.FragmentAddPostBinding
@@ -44,6 +46,8 @@ class AddPostFragment : Fragment() {
 
     private val binding get() = _binding!!
 
+    private val args: AddPostFragmentArgs by navArgs()
+
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -62,9 +66,7 @@ class AddPostFragment : Fragment() {
 
 
 
-        val args = arguments
-
-        val editPostId = args?.getString(ARG_POST_ID).orEmpty()
+        val editPostId = args.editPostId
 
         val isEditMode = editPostId.isNotBlank()
 
@@ -72,11 +74,11 @@ class AddPostFragment : Fragment() {
 
         if (isEditMode) {
 
-            binding.editPostTitle.setText(args?.getString(ARG_RECIPE_TITLE).orEmpty())
+            binding.editPostTitle.setText(args.editRecipeTitle)
 
-            binding.editPostDescription.setText(args?.getString(ARG_DESCRIPTION).orEmpty())
+            binding.editPostDescription.setText(args.editDescription)
 
-            binding.editPostImageUrl.setText(args?.getString(ARG_IMAGE_URL).orEmpty())
+            binding.editPostImageUrl.setText(args.editImageUrl)
 
             binding.savePostBtn.setText(R.string.add_post_save_changes)
 
@@ -122,9 +124,9 @@ class AddPostFragment : Fragment() {
 
             if (isEditMode) {
 
-                val creatorName = args?.getString(ARG_CREATOR_NAME).orEmpty()
+                val creatorName = args.editCreatorName
 
-                val creatorUid = args?.getString(ARG_CREATOR_UID).orEmpty()
+                val creatorUid = args.editCreatorUid
 
                 if (creatorUid != user.uid) {
 

@@ -37,10 +37,8 @@ class FeedFragment : Fragment() {
         
         // Initialize adapter with a click listener to navigate to Post Details
         adapter = PostRecyclerAdapter(emptyList()) { post ->
-            val bundle = Bundle().apply {
-                putString("postId", post.id)
-            }
-            findNavController().navigate(R.id.action_feed_to_post_details, bundle)
+            val action = FeedFragmentDirections.actionFeedToPostDetails(post.id)
+            findNavController().navigate(action)
         }
         
         binding.postsRecyclerView.adapter = adapter
