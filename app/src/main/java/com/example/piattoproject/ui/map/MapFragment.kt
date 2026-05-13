@@ -10,8 +10,12 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentMapBinding
+import com.example.piattoproject.ui.post.Post
+import com.example.piattoproject.ui.post.PostViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -19,6 +23,7 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.MarkerOptions
 
 class MapFragment : Fragment(), OnMapReadyCallback {
 
@@ -27,6 +32,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private var googleMap: GoogleMap? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var postViewModel: PostViewModel
+    private var posts: List<Post> = emptyList()
 
     private val requestLocationPermission =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -56,19 +63,52 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        postViewModel = ViewModelProvider(this)[PostViewModel::class.java]
+        postViewModel.posts.observe(viewLifecycleOwner) { updatedPosts ->
+            posts = updatedPosts
+            renderPostMarkers()
+        }
         val mapFragment = childFragmentManager.findFragmentById(R.id.mapContainer)
             as? SupportMapFragment
         mapFragment?.getMapAsync(this)
+        postViewModel.refreshPosts()
     }
 
     override fun onMapReady(map: GoogleMap) {
         googleMap = map
+        googleMap?.setOnMarkerClickListener { marker ->
+            val postId = marker.tag as? String
+            if (postId != null) {
+                val action = MapFragmentDirections.actionMapToPostDetails(postId)
+                findNavController().navigate(action)
+            }
+            true
+        }
 
         if (hasFineLocationPermission()) {
             enableUserLocation()
             moveCameraToDeviceLocation()
         } else {
             requestLocationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+        renderPostMarkers()
+    }
+
+    private fun renderPostMarkers() {
+        val map = googleMap ?: return
+        map.clear()
+        posts.forEach { post ->
+            val latitude = post.latitude
+            val longitude = post.longitude
+            if (latitude == null || longitude == null) {
+                return@forEach
+            }
+            val marker = map.addMarker(
+                MarkerOptions()
+                    .position(LatLng(latitude, longitude))
+                    .title(post.recipeTitle)
+            )
+            marker?.tag = post.id
         }
     }
 

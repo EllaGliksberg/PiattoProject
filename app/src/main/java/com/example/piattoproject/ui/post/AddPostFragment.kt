@@ -2,6 +2,10 @@ package com.example.piattoproject.ui.post
 
 
 
+import android.Manifest
+
+import android.content.pm.PackageManager
+
 import android.os.Bundle
 
 import android.view.LayoutInflater
@@ -11,6 +15,10 @@ import android.view.View
 import android.view.ViewGroup
 
 import android.widget.Toast
+
+import androidx.activity.result.contract.ActivityResultContracts
+
+import androidx.core.content.ContextCompat
 
 import androidx.fragment.app.Fragment
 
@@ -24,7 +32,13 @@ import com.example.piattoproject.databinding.FragmentAddPostBinding
 
 import com.example.piattoproject.ui.profile.FirebaseUserPostsRepository
 
+import com.google.android.gms.location.FusedLocationProviderClient
+
+import com.google.android.gms.location.LocationServices
+
 import com.google.firebase.auth.FirebaseAuth
+
+import com.google.firebase.auth.FirebaseUser
 
 import com.google.firebase.firestore.FirebaseFirestore
 
@@ -48,6 +62,12 @@ class AddPostFragment : Fragment() {
 
     private val args: AddPostFragmentArgs by navArgs()
 
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+
+    private val requestLocationPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        }
+
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
@@ -63,6 +83,10 @@ class AddPostFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
 
         super.onViewCreated(view, savedInstanceState)
+
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+
+        requestLocationPermissionIfNeeded()
 
 
 
@@ -188,83 +212,214 @@ class AddPostFragment : Fragment() {
 
 
 
-            val displayName = user.displayName?.takeIf { it.isNotBlank() }
-
-                ?: user.email?.substringBefore("@")?.takeIf { it.isNotBlank() }
-
-                ?: "User"
-
-
-
-            val id = UUID.randomUUID().toString()
-
-            val updatedAt = System.currentTimeMillis()
-
-            val newPost = Post(
-
-                id = id,
-
-                recipeTitle = title,
-
+            createPostWithLocation(
+                user = user,
+                title = title,
                 description = desc,
-
                 imageUrl = img,
-
-                creatorName = displayName,
-
-                creatorUid = user.uid,
-
-                lastUpdated = updatedAt,
-
             )
 
+        }
+
+    }
+
+    private fun requestLocationPermissionIfNeeded() {
+
+        if (hasLocationPermission()) {
+
+            return
+
+        }
+
+        requestLocationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+
+    }
+
+    private fun hasLocationPermission(): Boolean {
+
+        val context = context ?: return false
+
+        val fineLocationGranted = ContextCompat.checkSelfPermission(
+
+            context,
+
+            Manifest.permission.ACCESS_FINE_LOCATION,
+
+        ) == PackageManager.PERMISSION_GRANTED
+
+        val coarseLocationGranted = ContextCompat.checkSelfPermission(
+
+            context,
+
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+
+        ) == PackageManager.PERMISSION_GRANTED
+
+        return fineLocationGranted || coarseLocationGranted
+
+    }
+
+    private fun createPostWithLocation(
+
+        user: FirebaseUser,
+
+        title: String,
+
+        description: String,
+
+        imageUrl: String,
+
+    ) {
+
+        if (!hasLocationPermission()) {
+
+            saveNewPost(user, title, description, imageUrl, latitude = null, longitude = null)
+
+            return
+
+        }
+
+        try {
+
+            fusedLocationClient.lastLocation
+
+                .addOnSuccessListener { location ->
+
+                    saveNewPost(
+
+                        user = user,
+
+                        title = title,
+
+                        description = description,
+
+                        imageUrl = imageUrl,
+
+                        latitude = location?.latitude,
+
+                        longitude = location?.longitude,
+
+                    )
+
+                }
+
+                .addOnFailureListener {
+
+                    saveNewPost(user, title, description, imageUrl, latitude = null, longitude = null)
+
+                }
+
+        } catch (_: SecurityException) {
+
+            saveNewPost(user, title, description, imageUrl, latitude = null, longitude = null)
+
+        }
+
+    }
+
+    private fun saveNewPost(
+
+        user: FirebaseUser,
+
+        title: String,
+
+        description: String,
+
+        imageUrl: String,
+
+        latitude: Double?,
+
+        longitude: Double?,
+
+    ) {
+
+        val displayName = user.displayName?.takeIf { it.isNotBlank() }
+
+            ?: user.email?.substringBefore("@")?.takeIf { it.isNotBlank() }
+
+            ?: "User"
 
 
-            val firestorePayload = hashMapOf(
 
-                "recipeTitle" to title,
+        val id = UUID.randomUUID().toString()
 
-                "description" to desc,
+        val updatedAt = System.currentTimeMillis()
 
-                "imageUrl" to img,
+        val newPost = Post(
 
-                "creatorName" to displayName,
+            id = id,
 
-                "creatorUid" to user.uid,
+            recipeTitle = title,
 
-                "lastUpdated" to updatedAt,
+            description = description,
 
-            )
+            imageUrl = imageUrl,
+
+            creatorName = displayName,
+
+            creatorUid = user.uid,
+
+            latitude = latitude,
+
+            longitude = longitude,
+
+            lastUpdated = updatedAt,
+
+        )
 
 
 
-            FirebaseFirestore.getInstance().collection("posts").document(id).set(firestorePayload)
+        val firestorePayload = hashMapOf<String, Any>(
 
-                .addOnSuccessListener {
+            "recipeTitle" to title,
 
-                    Thread {
+            "description" to description,
+
+            "imageUrl" to imageUrl,
+
+            "creatorName" to displayName,
+
+            "creatorUid" to user.uid,
+
+            "lastUpdated" to updatedAt,
+
+        )
+
+        if (latitude != null && longitude != null) {
+
+            firestorePayload["latitude"] = latitude
+
+            firestorePayload["longitude"] = longitude
+
+        }
+
+
+
+        FirebaseFirestore.getInstance().collection("posts").document(id).set(firestorePayload)
+
+            .addOnSuccessListener {
+
+                viewLifecycleOwner.lifecycleScope.launch {
+
+                    withContext(Dispatchers.IO) {
 
                         AppLocalDbRepository.getInstance(requireContext()).postDao().insert(newPost)
 
-                        activity?.runOnUiThread {
+                    }
 
-                            Toast.makeText(context, "Post added successfully!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Post added successfully!", Toast.LENGTH_SHORT).show()
 
-                            parentFragmentManager.popBackStack()
-
-                        }
-
-                    }.start()
+                    parentFragmentManager.popBackStack()
 
                 }
 
-                .addOnFailureListener { e ->
+            }
 
-                    Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+            .addOnFailureListener { e ->
 
-                }
+                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
 
-        }
+            }
 
     }
 
