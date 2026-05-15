@@ -85,6 +85,11 @@
     </fragment>
 
     <fragment
+        android:id="@+id/fragment_external_recipes"
+        android:name="com.example.piattoproject.ui.externalrecipes.ExternalRecipesFragment"
+        android:label="Recipes" />
+
+    <fragment
         android:id="@+id/fragment_post_details"
         android:name="com.example.piattoproject.ui.postdetails.PostDetailsFragment"
         android:label="Post Details">

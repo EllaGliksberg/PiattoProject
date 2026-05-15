@@ -46,6 +46,7 @@ class MainActivity : AppCompatActivity() {
             R.id.fragment_feed,
             R.id.fragment_map,
             R.id.fragment_add_post,
+            R.id.fragment_external_recipes,
             R.id.fragment_profile
         )
 
