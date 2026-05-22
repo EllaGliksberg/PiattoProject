@@ -13,11 +13,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.appcompat.widget.PopupMenu
-import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.GridLayoutManager
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentProfileBinding
-import com.example.piattoproject.ui.post.AddPostFragment
 import com.example.piattoproject.ui.post.Post
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -103,15 +101,11 @@ class ProfileFragment : Fragment() {
     }
 
     private fun openEditPost(post: Post) {
-        val bundle = bundleOf(
-            AddPostFragment.ARG_POST_ID to post.id,
-            AddPostFragment.ARG_RECIPE_TITLE to post.recipeTitle,
-            AddPostFragment.ARG_DESCRIPTION to post.description,
-            AddPostFragment.ARG_IMAGE_URL to post.imageUrl,
-            AddPostFragment.ARG_CREATOR_NAME to post.creatorName,
-            AddPostFragment.ARG_CREATOR_UID to post.creatorUid,
+        val action = ProfileFragmentDirections.actionProfileToAddPost(
+            postId = post.id,
+            isEditMode = true,
         )
-        findNavController().navigate(R.id.action_profile_to_addPost, bundle)
+        findNavController().navigate(action)
     }
 
     private fun showDeletePostConfirmation(post: Post) {
