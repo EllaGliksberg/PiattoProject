@@ -130,7 +130,8 @@ class AuthFragment : Fragment() {
         }
 
         if (uiState.isAuthenticated && FirebaseAuth.getInstance().currentUser != null) {
-            findNavController().navigate(R.id.action_auth_to_feed)
+            val action = AuthFragmentDirections.actionAuthToFeed()
+            findNavController().navigate(action)
         }
     }
 

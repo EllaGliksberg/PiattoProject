@@ -15,6 +15,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.fragment.navArgs
 
 import com.example.piattoproject.R
 
@@ -43,6 +44,8 @@ class AddPostFragment : Fragment() {
     private var _binding: FragmentAddPostBinding? = null
 
     private val binding get() = _binding!!
+    private val args: AddPostFragmentArgs by navArgs()
+    private var editingPost: Post? = null
 
 
 
@@ -62,23 +65,17 @@ class AddPostFragment : Fragment() {
 
 
 
-        val args = arguments
+        val editPostId = args.postId.orEmpty()
 
-        val editPostId = args?.getString(ARG_POST_ID).orEmpty()
-
-        val isEditMode = editPostId.isNotBlank()
+        val isEditMode = args.isEditMode && editPostId.isNotBlank()
 
 
 
         if (isEditMode) {
 
-            binding.editPostTitle.setText(args?.getString(ARG_RECIPE_TITLE).orEmpty())
-
-            binding.editPostDescription.setText(args?.getString(ARG_DESCRIPTION).orEmpty())
-
-            binding.editPostImageUrl.setText(args?.getString(ARG_IMAGE_URL).orEmpty())
-
             binding.savePostBtn.setText(R.string.add_post_save_changes)
+
+            loadPostForEditing(editPostId)
 
         } else {
 
@@ -122,9 +119,15 @@ class AddPostFragment : Fragment() {
 
             if (isEditMode) {
 
-                val creatorName = args?.getString(ARG_CREATOR_NAME).orEmpty()
+                val existingPost = editingPost
+                if (existingPost == null) {
+                    Toast.makeText(context, "Post is still loading", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
 
-                val creatorUid = args?.getString(ARG_CREATOR_UID).orEmpty()
+                val creatorName = existingPost.creatorName
+
+                val creatorUid = existingPost.creatorUid
 
                 if (creatorUid != user.uid) {
 
@@ -276,22 +279,21 @@ class AddPostFragment : Fragment() {
 
     }
 
-
-
-    companion object {
-
-        const val ARG_POST_ID = "edit_post_id"
-
-        const val ARG_RECIPE_TITLE = "edit_recipe_title"
-
-        const val ARG_DESCRIPTION = "edit_description"
-
-        const val ARG_IMAGE_URL = "edit_image_url"
-
-        const val ARG_CREATOR_NAME = "edit_creator_name"
-
-        const val ARG_CREATOR_UID = "edit_creator_uid"
-
+    private fun loadPostForEditing(postId: String) {
+        binding.savePostBtn.isEnabled = false
+        FirebaseFirestore.getInstance().collection("posts").document(postId).get()
+            .addOnSuccessListener { document ->
+                val post = document.toPost()
+                editingPost = post
+                binding.editPostTitle.setText(post.recipeTitle)
+                binding.editPostDescription.setText(post.description)
+                binding.editPostImageUrl.setText(post.imageUrl)
+                binding.savePostBtn.isEnabled = true
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                binding.savePostBtn.isEnabled = true
+            }
     }
 
 }
