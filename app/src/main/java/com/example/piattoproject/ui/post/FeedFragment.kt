@@ -30,7 +30,8 @@ class FeedFragment : Fragment() {
 
         binding.addPostBtn.setOnClickListener {
             // Navigate using the action defined in nav_graph.xml
-            findNavController().navigate(R.id.action_feed_to_addPost)
+            val action = FeedFragmentDirections.actionFeedToAddPost()
+            findNavController().navigate(action)
         }
 
         binding.postsRecyclerView.layoutManager = LinearLayoutManager(context)

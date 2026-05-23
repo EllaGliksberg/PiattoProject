@@ -40,6 +40,9 @@
     <string name="bottom_nav_profile">Profile</string>
     <string name="bottom_nav_map">Map</string>
     <string name="bottom_nav_recipes">Recipes</string>
+    <string name="external_recipes_search_hint">Search recipes</string>
+    <string name="external_recipes_search_button">Search</string>
+    <string name="external_recipe_image_content_description">Recipe image</string>
     <string name="profile_my_posts_section">My posts</string>
     <string name="profile_no_posts_yet">No posts yet</string>
     <string name="profile_post_thumbnail_content_description">Post image</string>

@@ -38,29 +38,14 @@
         android:name="com.example.piattoproject.ui.post.AddPostFragment"
         android:label="Create Post">
         <argument
-            android:name="edit_post_id"
-            android:defaultValue=""
+            android:name="postId"
+            android:defaultValue="@null"
+            app:nullable="true"
             app:argType="string" />
         <argument
-            android:name="edit_recipe_title"
-            android:defaultValue=""
-            app:argType="string" />
-        <argument
-            android:name="edit_description"
-            android:defaultValue=""
-            app:argType="string" />
-        <argument
-            android:name="edit_image_url"
-            android:defaultValue=""
-            app:argType="string" />
-        <argument
-            android:name="edit_creator_name"
-            android:defaultValue=""
-            app:argType="string" />
-        <argument
-            android:name="edit_creator_uid"
-            android:defaultValue=""
-            app:argType="string" />
+            android:name="isEditMode"
+            android:defaultValue="false"
+            app:argType="boolean" />
     </fragment>
 
     <fragment
@@ -83,6 +68,11 @@
             android:id="@+id/action_profile_to_addPost"
             app:destination="@id/fragment_add_post" />
     </fragment>
+
+    <fragment
+        android:id="@+id/fragment_external_recipes"
+        android:name="com.example.piattoproject.ui.externalrecipes.ExternalRecipesFragment"
+        android:label="Recipes" />
 
     <fragment
         android:id="@+id/fragment_post_details"

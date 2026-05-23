@@ -102,12 +102,8 @@ class ProfileFragment : Fragment() {
 
     private fun openEditPost(post: Post) {
         val action = ProfileFragmentDirections.actionProfileToAddPost(
-            editPostId = post.id,
-            editRecipeTitle = post.recipeTitle,
-            editDescription = post.description,
-            editImageUrl = post.imageUrl,
-            editCreatorName = post.creatorName,
-            editCreatorUid = post.creatorUid,
+            postId = post.id,
+            isEditMode = true,
         )
         findNavController().navigate(action)
     }
