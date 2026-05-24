@@ -10,6 +10,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentFeedBinding
+import com.google.android.material.snackbar.Snackbar
 
 class FeedFragment : Fragment() {
 
@@ -44,9 +45,23 @@ class FeedFragment : Fragment() {
         
         binding.postsRecyclerView.adapter = adapter
 
+        binding.feedSwipeRefresh.setOnRefreshListener {
+            viewModel.refreshPosts()
+        }
+
         viewModel.posts.observe(viewLifecycleOwner) { updatedPosts ->
             adapter.posts = updatedPosts
             adapter.notifyDataSetChanged()
+        }
+
+        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            binding.feedSwipeRefresh.isRefreshing = isLoading
+        }
+
+        viewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
+            if (!errorMessage.isNullOrBlank()) {
+                Snackbar.make(binding.root, errorMessage, Snackbar.LENGTH_LONG).show()
+            }
         }
 
         viewModel.refreshPosts()
