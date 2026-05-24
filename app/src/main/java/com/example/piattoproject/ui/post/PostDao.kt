@@ -7,6 +7,9 @@ interface PostDao {
     @Query("SELECT * FROM posts ORDER BY lastUpdated DESC")
     fun getAll(): androidx.lifecycle.LiveData<List<Post>>
 
+    @Query("SELECT * FROM posts ORDER BY lastUpdated DESC LIMIT :limit")
+    fun getFeedOrdered(limit: Int): List<Post>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(vararg posts: Post)
 

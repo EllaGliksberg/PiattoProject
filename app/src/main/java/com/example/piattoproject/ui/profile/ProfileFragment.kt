@@ -52,7 +52,7 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val viewBinding = binding ?: return
-        profileViewModel = ViewModelProvider(this, ProfileViewModelFactory())[ProfileViewModel::class.java]
+        profileViewModel = ViewModelProvider(requireActivity(), ProfileViewModelFactory())[ProfileViewModel::class.java]
         myPostsAdapter = ProfilePostsGridAdapter { post, anchor ->
             showPostActionsMenu(post, anchor)
         }
@@ -62,7 +62,6 @@ class ProfileFragment : Fragment() {
         viewBinding.myPostsRecyclerView.isNestedScrollingEnabled = false
 
         savedPostsAdapter = ProfilePostsGridAdapter { post, anchor ->
-            // Actions for saved posts if needed, or just navigate
             val action = ProfileFragmentDirections.actionProfileToPostDetails(post.id)
             findNavController().navigate(action)
         }
@@ -78,6 +77,7 @@ class ProfileFragment : Fragment() {
         super.onResume()
         if (::profileViewModel.isInitialized) {
             profileViewModel.refreshMyPosts()
+            profileViewModel.refreshSavedPosts()
         }
     }
 
@@ -132,6 +132,20 @@ class ProfileFragment : Fragment() {
 
     private fun setupListeners() {
         val viewBinding = binding ?: return
+        viewBinding.postsStatLayout.setOnClickListener {
+            val action = ProfileFragmentDirections.actionProfileToProfilePostsList(
+                listType = "my_posts",
+                title = getString(R.string.profile_my_posts_section)
+            )
+            findNavController().navigate(action)
+        }
+        viewBinding.savedStatLayout.setOnClickListener {
+            val action = ProfileFragmentDirections.actionProfileToProfilePostsList(
+                listType = "saved_posts",
+                title = "Saved Recipes"
+            )
+            findNavController().navigate(action)
+        }
         viewBinding.editProfileButton.setOnClickListener {
             profileViewModel.onEditClicked()
         }
@@ -180,6 +194,7 @@ class ProfileFragment : Fragment() {
         viewBinding.profileStatsLayout.visibility = if (uiState.isEditing) View.GONE else View.VISIBLE
 
         viewBinding.postsCountTextView.text = uiState.myPosts.size.toString()
+        viewBinding.savedCountTextView.text = uiState.savedPosts.size.toString()
         myPostsAdapter.submitList(uiState.myPosts)
         val showEmptyMyPosts = uiState.myPosts.isEmpty() && !uiState.isLoadingMyPosts
         viewBinding.myPostsEmptyTextView.visibility = if (showEmptyMyPosts) View.VISIBLE else View.GONE

@@ -8,7 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.piattoproject.R
+import androidx.recyclerview.widget.RecyclerView
 import com.example.piattoproject.databinding.FragmentFeedBinding
 import com.google.android.material.snackbar.Snackbar
 
@@ -27,31 +27,42 @@ class FeedFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel = ViewModelProvider(this)[PostViewModel::class.java]
+        viewModel = ViewModelProvider(requireActivity())[PostViewModel::class.java]
 
         binding.addPostBtn.setOnClickListener {
-            // Navigate using the action defined in nav_graph.xml
             val action = FeedFragmentDirections.actionFeedToAddPost()
             findNavController().navigate(action)
         }
 
-        binding.postsRecyclerView.layoutManager = LinearLayoutManager(context)
-        
-        // Initialize adapter with a click listener to navigate to Post Details
-        adapter = PostRecyclerAdapter(emptyList()) { post ->
-            val action = FeedFragmentDirections.actionFeedToPostDetails(post.id)
-            findNavController().navigate(action)
-        }
-        
+        val layoutManager = LinearLayoutManager(context)
+        binding.postsRecyclerView.layoutManager = layoutManager
+
+        adapter = PostRecyclerAdapter(
+            onPostClick = { post ->
+                val action = FeedFragmentDirections.actionFeedToPostDetails(post.id)
+                findNavController().navigate(action)
+            }
+        )
+
         binding.postsRecyclerView.adapter = adapter
+
+        binding.postsRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                if (dy <= 0) return
+                val lastVisible = layoutManager.findLastVisibleItemPosition()
+                val total = layoutManager.itemCount
+                if (lastVisible >= total - 3) {
+                    viewModel.loadNextPage()
+                }
+            }
+        })
 
         binding.feedSwipeRefresh.setOnRefreshListener {
             viewModel.refreshPosts()
         }
 
         viewModel.posts.observe(viewLifecycleOwner) { updatedPosts ->
-            adapter.posts = updatedPosts
-            adapter.notifyDataSetChanged()
+            adapter.submitList(updatedPosts)
         }
 
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
@@ -64,7 +75,7 @@ class FeedFragment : Fragment() {
             }
         }
 
-        viewModel.refreshPosts()
+        viewModel.loadInitialFeed()
     }
 
     override fun onDestroyView() {

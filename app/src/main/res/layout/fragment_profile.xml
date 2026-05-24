@@ -106,9 +106,14 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
+                        android:id="@+id/postsStatLayout"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="8dp"
                         android:orientation="vertical">
 
                         <TextView
@@ -123,7 +128,35 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:text="Posts"
+                            android:text="@string/profile_stat_posts"
+                            android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/savedStatLayout"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="32dp"
+                        android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="8dp"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/savedCountTextView"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="0"
+                            android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:text="@string/profile_stat_saved"
                             android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
                     </LinearLayout>
                 </LinearLayout>

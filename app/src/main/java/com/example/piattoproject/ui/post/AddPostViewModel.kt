@@ -37,12 +37,10 @@ class AddPostViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 var imageUrl = ""
-                // 1. העלאת תמונה לענן אם נבחרה
                 selectedImageUri?.let { uri ->
                     imageUrl = repository.uploadImage(uri)
                 }
 
-                // 2. שמירה ב-Firestore וב-Room (מתבצע בתוך ה-Repository)
                 repository.createPost(
                     title = title.trim(),
                     description = description.trim(),
@@ -69,7 +67,6 @@ class AddPostViewModel(application: Application) : AndroidViewModel(application)
             _uiState.value = _uiState.value?.copy(isLoading = true)
             val post = repository.getPostById(postId)
             if (post != null) {
-                // We need a way to pass this data to the Fragment
                 _uiState.postValue(_uiState.value?.copy(
                     isLoading = false,
                     editingPost = post
@@ -100,12 +97,10 @@ class AddPostViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 var imageUrl: String? = null
-                // 1. Upload new image if selected
                 selectedImageUri?.let { uri ->
                     imageUrl = repository.uploadImage(uri)
                 }
 
-                // 2. Update in Firestore and Room
                 repository.updatePost(
                     postId = postId,
                     title = title.trim(),

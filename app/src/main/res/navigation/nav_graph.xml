@@ -67,6 +67,27 @@
         <action
             android:id="@+id/action_profile_to_addPost"
             app:destination="@id/fragment_add_post" />
+        <action
+            android:id="@+id/action_profile_to_profilePostsList"
+            app:destination="@id/fragment_profile_posts_list" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/fragment_profile_posts_list"
+        android:name="com.example.piattoproject.ui.profile.ProfilePostsListFragment"
+        android:label="{title}">
+        <argument
+            android:name="listType"
+            app:argType="string" />
+        <argument
+            android:name="title"
+            app:argType="string" />
+        <action
+            android:id="@+id/action_profilePostsList_to_post_details"
+            app:destination="@id/fragment_post_details" />
+        <action
+            android:id="@+id/action_profilePostsList_to_addPost"
+            app:destination="@id/fragment_add_post" />
     </fragment>
 
     <fragment
