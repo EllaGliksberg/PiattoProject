@@ -47,7 +47,7 @@ class FirebaseUserPostsRepository(
         if (storedCreatorUid != uid) {
             throw IllegalStateException("Cannot update this post")
         }
-        val payload = hashMapOf(
+        val payload = hashMapOf<String, Any>(
             "recipeTitle" to post.recipeTitle,
             "description" to post.description,
             "imageUrl" to post.imageUrl,
@@ -55,6 +55,10 @@ class FirebaseUserPostsRepository(
             "creatorUid" to post.creatorUid,
             "lastUpdated" to post.lastUpdated,
         )
+        if (post.latitude != null && post.longitude != null) {
+            payload["latitude"] = post.latitude
+            payload["longitude"] = post.longitude
+        }
         firestore.collection(POSTS_COLLECTION).document(post.id).set(payload).await()
     }
 

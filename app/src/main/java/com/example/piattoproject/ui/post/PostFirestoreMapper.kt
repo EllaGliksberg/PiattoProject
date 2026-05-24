@@ -9,5 +9,7 @@ fun DocumentSnapshot.toPost(): Post = Post(
     imageUrl = getString("imageUrl").orEmpty(),
     creatorName = getString("creatorName").orEmpty(),
     creatorUid = getString("creatorUid").orEmpty(),
+    latitude = getDouble("latitude"),
+    longitude = getDouble("longitude"),
     lastUpdated = getLong("lastUpdated") ?: 0L,
 )

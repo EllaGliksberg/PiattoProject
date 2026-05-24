@@ -11,5 +11,7 @@ data class Post(
     val imageUrl: String,
     val creatorName: String,
     val creatorUid: String = "",
+    val latitude: Double? = null,
+    val longitude: Double? = null,
     val lastUpdated: Long = System.currentTimeMillis(),
 )

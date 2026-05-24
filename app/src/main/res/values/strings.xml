@@ -5,6 +5,8 @@
     <string name="nav_upload">Upload</string>
     <string name="nav_profile">My profile</string>
     <string name="nav_logout">Logout</string>
+    <string name="map_location_permission_denied">Location permission denied. Showing default map area.</string>
+    <string name="map_location_unavailable">Current location unavailable. Showing default map area.</string>
 
     <string name="auth_login_title">Welcome back</string>
     <string name="auth_login_subtitle">Sign in to continue</string>
@@ -22,7 +24,7 @@
     <string name="profile_title">Profile</string>
     <string name="profile_photo_content_description">Profile photo</string>
     <string name="mock_display_name">Ella Gliksberg</string>
-    <string name="mock_username">@ella_cooks</string>
+    <string name="mock_username">ella_cooks</string>
     <string name="mock_bio">Recipe lover sharing quick and healthy Mediterranean dishes.</string>
     <string name="profile_edit_button">Edit profile</string>
     <string name="profile_save_button">Save</string>
@@ -50,8 +52,8 @@
     <string name="profile_post_delete_title">Delete post?</string>
     <string name="profile_post_delete_message">This cannot be undone.</string>
     <string name="profile_post_delete_confirm">Delete</string>
+    <string name="add_post_content_description">Add post</string>
     <string name="add_post_save_changes">Save changes</string>
     <string name="add_post_post_recipe">Post recipe</string>
-    <string name="add_post_content_description">Add post</string>
     <string name="post_updated_success">Post updated</string>
 </resources>
