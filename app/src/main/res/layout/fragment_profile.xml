@@ -106,9 +106,8 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
                         android:gravity="center"
                         android:orientation="vertical">
 
@@ -125,29 +124,6 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:text="Posts"
-                            android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:id="@+id/likesCountTextView"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="5400"
-                            android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="Likes"
                             android:textAppearance="@style/TextAppearance.Material3.BodySmall" />
                     </LinearLayout>
                 </LinearLayout>
@@ -288,6 +264,39 @@
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/myPostsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:nestedScrollingEnabled="false"
+            tools:listitem="@layout/item_profile_post" />
+
+        <TextView
+            android:id="@+id/savedPostsLabelTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:text="Saved Recipes"
+            android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="48dp"
+            android:layout_height="2dp"
+            android:layout_marginTop="4dp"
+            android:background="?attr/colorPrimary" />
+
+        <TextView
+            android:id="@+id/savedPostsEmptyTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:text="You haven't saved any recipes yet."
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:visibility="gone" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/savedPostsRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"

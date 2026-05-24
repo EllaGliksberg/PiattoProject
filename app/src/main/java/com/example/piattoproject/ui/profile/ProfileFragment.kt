@@ -25,6 +25,7 @@ class ProfileFragment : Fragment() {
     private var binding: FragmentProfileBinding? = null
     private lateinit var profileViewModel: ProfileViewModel
     private lateinit var myPostsAdapter: ProfilePostsGridAdapter
+    private lateinit var savedPostsAdapter: ProfilePostsGridAdapter
     private val pickProfileImage = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri == null) {
             return@registerForActivityResult
@@ -59,6 +60,16 @@ class ProfileFragment : Fragment() {
         viewBinding.myPostsRecyclerView.layoutManager = gridLayoutManager
         viewBinding.myPostsRecyclerView.adapter = myPostsAdapter
         viewBinding.myPostsRecyclerView.isNestedScrollingEnabled = false
+
+        savedPostsAdapter = ProfilePostsGridAdapter { post, anchor ->
+            // Actions for saved posts if needed, or just navigate
+            val action = ProfileFragmentDirections.actionProfileToPostDetails(post.id)
+            findNavController().navigate(action)
+        }
+        viewBinding.savedPostsRecyclerView.layoutManager = GridLayoutManager(requireContext(), 2)
+        viewBinding.savedPostsRecyclerView.adapter = savedPostsAdapter
+        viewBinding.savedPostsRecyclerView.isNestedScrollingEnabled = false
+
         setupListeners()
         observeProfileUiState()
     }
@@ -173,6 +184,11 @@ class ProfileFragment : Fragment() {
         val showEmptyMyPosts = uiState.myPosts.isEmpty() && !uiState.isLoadingMyPosts
         viewBinding.myPostsEmptyTextView.visibility = if (showEmptyMyPosts) View.VISIBLE else View.GONE
         viewBinding.myPostsRecyclerView.visibility = if (uiState.myPosts.isNotEmpty()) View.VISIBLE else View.GONE
+
+        savedPostsAdapter.submitList(uiState.savedPosts)
+        val showEmptySavedPosts = uiState.savedPosts.isEmpty() && !uiState.isLoadingSavedPosts
+        viewBinding.savedPostsEmptyTextView.visibility = if (showEmptySavedPosts) View.VISIBLE else View.GONE
+        viewBinding.savedPostsRecyclerView.visibility = if (uiState.savedPosts.isNotEmpty()) View.VISIBLE else View.GONE
 
         updateEditTextIfDifferent(viewBinding.displayNameEditText.text?.toString(), uiState.editedDisplayName) {
             viewBinding.displayNameEditText.setText(uiState.editedDisplayName)

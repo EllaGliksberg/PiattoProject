@@ -14,4 +14,5 @@ data class Post(
     val latitude: Double? = null,
     val longitude: Double? = null,
     val lastUpdated: Long = System.currentTimeMillis(),
+    val savesCount: Int = 0,
 )

@@ -5,14 +5,19 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentPostDetailsBinding
+import com.squareup.picasso.Picasso
 
 class PostDetailsFragment : Fragment() {
 
     private var _binding: FragmentPostDetailsBinding? = null
     private val binding get() = _binding!!
     private val args: PostDetailsFragmentArgs by navArgs()
+    private val viewModel: PostDetailsViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -26,10 +31,53 @@ class PostDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val postId = args.postId
-        // In a real app, we would fetch the post details using this ID
-        binding.detailsTitle.text = "Post ID: $postId"
-        binding.detailsDescription.text = "Detailed information for post $postId will appear here."
+        viewModel.loadPost(args.postId)
+
+        observeViewModel()
+
+        binding.editPostBtn.setOnClickListener {
+            val action = PostDetailsFragmentDirections.actionPostDetailsToAddPost(
+                postId = args.postId,
+                isEditMode = true
+            )
+            findNavController().navigate(action)
+        }
+
+        binding.detailsSaveBtn.setOnClickListener {
+            viewModel.toggleSave(args.postId)
+        }
+    }
+
+    private fun observeViewModel() {
+        viewModel.post.observe(viewLifecycleOwner) { post ->
+            if (post != null) {
+                binding.detailsTitle.text = post.recipeTitle
+                binding.detailsDescription.text = post.description
+                binding.detailsAuthor.text = "By ${post.creatorName}"
+                binding.detailsSavesCount.text = post.savesCount.toString()
+
+                if (post.imageUrl.isNotEmpty()) {
+                    Picasso.get()
+                        .load(post.imageUrl)
+                        .placeholder(android.R.drawable.ic_menu_gallery)
+                        .error(android.R.drawable.stat_notify_error)
+                        .into(binding.detailsImage)
+                }
+            }
+        }
+
+        viewModel.isSaved.observe(viewLifecycleOwner) { isSaved ->
+            val iconRes = if (isSaved) {
+                android.R.drawable.btn_star_big_on
+            } else {
+                android.R.drawable.ic_menu_save
+            }
+            binding.detailsSaveIcon.setImageResource(iconRes)
+        }
+
+        viewModel.isCreator.observe(viewLifecycleOwner) { isCreator ->
+            binding.editPostBtn.visibility = if (isCreator) View.VISIBLE else View.GONE
+        }
     }
 
     override fun onDestroyView() {
