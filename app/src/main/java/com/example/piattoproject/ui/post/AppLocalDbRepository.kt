@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Post::class], version = 4)
+@Database(entities = [Post::class], version = 7)
 abstract class AppLocalDbRepository : RoomDatabase() {
     abstract fun postDao(): PostDao
 

@@ -36,9 +36,7 @@ class MainActivity : AppCompatActivity() {
 
         // Redirect to Login if no user session is found
         if (FirebaseAuth.getInstance().currentUser == null) {
-            navController.navigate(R.id.fragment_auth) {
-                popUpTo(R.id.nav_graph) { inclusive = true }
-            }
+            navController.navigate(R.id.fragment_auth)
         }
 
         // Destinations where the Bottom Navigation should be visible

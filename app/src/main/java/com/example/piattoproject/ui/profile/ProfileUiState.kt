@@ -18,4 +18,6 @@ data class ProfileUiState(
     val errorMessage: String?,
     val myPosts: List<Post>,
     val isLoadingMyPosts: Boolean,
+    val savedPosts: List<Post> = emptyList(),
+    val isLoadingSavedPosts: Boolean = false,
 )

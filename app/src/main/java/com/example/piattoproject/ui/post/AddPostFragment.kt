@@ -2,6 +2,7 @@ package com.example.piattoproject.ui.post
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,9 +12,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentAddPostBinding
+import com.example.piattoproject.utils.ImageUtils
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
@@ -24,11 +27,16 @@ class AddPostFragment : Fragment() {
     private val args: AddPostFragmentArgs by navArgs()
     private val viewModel: AddPostViewModel by viewModels()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private var boundEditPostId: String? = null
 
-    private val requestLocationPermission =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+    // Launcher לבחירת תמונה מהגלריה
+    private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+        uri?.let {
+            binding.postImagePreview.setImageURI(it)
+            viewModel.setSelectedImageUri(it)
         }
+    }
+
+    private val requestLocationPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentAddPostBinding.inflate(inflater, container, false)
@@ -41,121 +49,102 @@ class AddPostFragment : Fragment() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         requestLocationPermissionIfNeeded()
 
-        val editPostId = args.postId.orEmpty()
-        val isEditMode = args.isEditMode && editPostId.isNotBlank()
+        // כפתור בחירת תמונה
+        binding.btnPickImage.setOnClickListener {
+            pickImageLauncher.launch("image/*")
+        }
 
-        if (isEditMode) {
-            binding.savePostBtn.setText(R.string.add_post_save_changes)
-            viewModel.loadPostForEdit(editPostId)
-        } else {
-            binding.savePostBtn.setText(R.string.add_post_post_recipe)
+        binding.savePostBtn.setOnClickListener {
+            if (args.isEditMode && args.postId != null) {
+                updatePost(args.postId!!)
+            } else {
+                savePost()
+            }
+        }
+
+        if (args.isEditMode && args.postId != null) {
+            binding.tvAddPostTitle.text = "Edit Recipe"
+            binding.savePostBtn.text = "Update Post"
+            viewModel.loadPostForEdit(args.postId!!)
         }
 
         observeUiState()
-
-        binding.savePostBtn.setOnClickListener {
-            val title = binding.editPostTitle.text.toString()
-            val desc = binding.editPostDescription.text.toString()
-            val img = binding.editPostImageUrl.text.toString()
-
-            if (isEditMode) {
-                viewModel.updatePost(
-                    postId = editPostId,
-                    title = title,
-                    description = desc,
-                    imageUrl = img,
-                )
-            } else {
-                createPostWithLocation(
-                    title = title,
-                    description = desc,
-                    imageUrl = img,
-                )
-            }
-        }
     }
 
-    private fun requestLocationPermissionIfNeeded() {
+    private fun updatePost(postId: String) {
+        val title = binding.editPostTitle.text.toString()
+        val desc = binding.editPostDescription.text.toString()
+
         if (hasLocationPermission()) {
-            return
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    viewModel.updatePost(postId, title, desc, location?.latitude, location?.longitude)
+                }.addOnFailureListener {
+                    viewModel.updatePost(postId, title, desc, null, null)
+                }
+            } catch (e: SecurityException) {
+                viewModel.updatePost(postId, title, desc, null, null)
+            }
+        } else {
+            viewModel.updatePost(postId, title, desc, null, null)
         }
-        requestLocationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
-    private fun hasLocationPermission(): Boolean {
-        val context = context ?: return false
-        val fineLocationGranted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_FINE_LOCATION,
-        ) == PackageManager.PERMISSION_GRANTED
-        val coarseLocationGranted = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.ACCESS_COARSE_LOCATION,
-        ) == PackageManager.PERMISSION_GRANTED
-        return fineLocationGranted || coarseLocationGranted
-    }
+    private fun savePost() {
+        val title = binding.editPostTitle.text.toString()
+        val desc = binding.editPostDescription.text.toString()
 
-    private fun createPostWithLocation(
-        title: String,
-        description: String,
-        imageUrl: String,
-    ) {
-        if (!hasLocationPermission()) {
-            viewModel.createPost(title, description, imageUrl, latitude = null, longitude = null)
-            return
-        }
-
-        try {
-            fusedLocationClient.lastLocation
-                .addOnSuccessListener { location ->
-                    viewModel.createPost(
-                        title = title,
-                        description = description,
-                        imageUrl = imageUrl,
-                        latitude = location?.latitude,
-                        longitude = location?.longitude,
-                    )
+        if (hasLocationPermission()) {
+            try {
+                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                    viewModel.createPost(title, desc, location?.latitude, location?.longitude)
+                }.addOnFailureListener {
+                    viewModel.createPost(title, desc, null, null)
                 }
-                .addOnFailureListener {
-                    viewModel.createPost(title, description, imageUrl, latitude = null, longitude = null)
-                }
-        } catch (_: SecurityException) {
-            viewModel.createPost(title, description, imageUrl, latitude = null, longitude = null)
+            } catch (e: SecurityException) {
+                viewModel.createPost(title, desc, null, null)
+            }
+        } else {
+            viewModel.createPost(title, desc, null, null)
         }
     }
 
     private fun observeUiState() {
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
+            // ניהול תצוגת טעינה
+            binding.postProgressBar.visibility = if (state.isLoading) View.VISIBLE else View.GONE
             binding.savePostBtn.isEnabled = !state.isLoading
-            bindEditingPost(state.editingPost)
+            binding.btnPickImage.isEnabled = !state.isLoading
 
-            val error = state.errorMessage
-            if (!error.isNullOrBlank()) {
-                Toast.makeText(context, error, Toast.LENGTH_LONG).show()
+            state.errorMessage?.let {
+                Toast.makeText(context, it, Toast.LENGTH_LONG).show()
                 viewModel.resetState()
             }
 
+            state.editingPost?.let { post ->
+                binding.editPostTitle.setText(post.recipeTitle)
+                binding.editPostDescription.setText(post.description)
+                ImageUtils.loadImage(binding.postImagePreview, post.imageUrl)
+            }
+
             if (state.isSuccess) {
-                val message = if (args.isEditMode) R.string.post_updated_success else null
-                if (message != null) {
-                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
-                } else {
-                    Toast.makeText(context, "Post added successfully!", Toast.LENGTH_SHORT).show()
-                }
+                val message = if (args.isEditMode) "Post updated!" else "Post added!"
+                Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
                 viewModel.resetState()
-                parentFragmentManager.popBackStack()
+                findNavController().popBackStack()
             }
         }
     }
 
-    private fun bindEditingPost(post: Post?) {
-        if (post == null || boundEditPostId == post.id) {
-            return
+    private fun requestLocationPermissionIfNeeded() {
+        if (!hasLocationPermission()) {
+            requestLocationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
-        boundEditPostId = post.id
-        binding.editPostTitle.setText(post.recipeTitle)
-        binding.editPostDescription.setText(post.description)
-        binding.editPostImageUrl.setText(post.imageUrl)
+    }
+
+    private fun hasLocationPermission(): Boolean {
+        val context = context ?: return false
+        return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
     }
 
     override fun onDestroyView() {

@@ -8,7 +8,7 @@ import android.widget.ImageView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.piattoproject.R
 import com.example.piattoproject.ui.post.Post
-import com.squareup.picasso.Picasso
+import com.example.piattoproject.utils.ImageUtils
 
 class ProfilePostsGridAdapter(
     private var posts: List<Post> = emptyList(),
@@ -28,15 +28,7 @@ class ProfilePostsGridAdapter(
 
     override fun onBindViewHolder(holder: Holder, position: Int) {
         val post = posts[position]
-        if (post.imageUrl.isNotBlank()) {
-            Picasso.get()
-                .load(post.imageUrl)
-                .placeholder(android.R.drawable.ic_menu_gallery)
-                .error(android.R.drawable.ic_menu_gallery)
-                .into(holder.imageView)
-        } else {
-            holder.imageView.setImageResource(android.R.drawable.ic_menu_gallery)
-        }
+        ImageUtils.loadImage(holder.imageView, post.imageUrl)
         holder.menuButton.setOnClickListener { anchor ->
             onPostMenuClick(post, anchor)
         }

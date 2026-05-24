@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.piattoproject.ui.post.AppLocalDbRepository
 import com.example.piattoproject.ui.post.Post
+import com.example.piattoproject.ui.post.PostRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -14,14 +15,26 @@ import kotlinx.coroutines.withContext
 class ProfileViewModel(
     private val profileImageLocalStore: ProfileImageLocalStore,
     private val appContext: Context,
-    private val repository: FirebaseProfileRepository = FirebaseProfileRepository(),
+    private val profileRepository: FirebaseProfileRepository = FirebaseProfileRepository(),
     private val userPostsRepository: FirebaseUserPostsRepository = FirebaseUserPostsRepository(),
+    private val postRepository: PostRepository = PostRepository(appContext),
 ) : ViewModel() {
     private val _profileUiState = MutableLiveData(createInitialState())
     val profileUiState: LiveData<ProfileUiState> = _profileUiState
 
     init {
         loadProfile()
+        refreshSavedPosts()
+    }
+
+    fun refreshSavedPosts() {
+        val current = _profileUiState.value ?: createInitialState()
+        _profileUiState.value = current.copy(isLoadingSavedPosts = true)
+        viewModelScope.launch {
+            val posts = postRepository.getSavedPostsForCurrentUser()
+            val state = _profileUiState.value ?: return@launch
+            _profileUiState.value = state.copy(savedPosts = posts, isLoadingSavedPosts = false)
+        }
     }
 
     fun refreshMyPosts() {
@@ -64,7 +77,7 @@ class ProfileViewModel(
         val currentState = _profileUiState.value ?: createInitialState()
         _profileUiState.value = currentState.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
-            runCatching { repository.loadProfile() }
+            runCatching { profileRepository.loadProfile() }
                 .onSuccess { profile ->
                     _profileUiState.value = createLoadedState(
                         profile = profile,
@@ -162,7 +175,7 @@ class ProfileViewModel(
         )
         viewModelScope.launch {
             runCatching {
-                repository.saveProfile(
+                profileRepository.saveProfile(
                     fullName = displayName,
                     username = username,
                     bio = bio,
@@ -170,10 +183,15 @@ class ProfileViewModel(
             }.onSuccess { savedProfile ->
                 val prevPosts = _profileUiState.value?.myPosts ?: currentState.myPosts
                 val prevLoadingPosts = _profileUiState.value?.isLoadingMyPosts ?: currentState.isLoadingMyPosts
+                val prevSavedPosts = _profileUiState.value?.savedPosts ?: currentState.savedPosts
                 _profileUiState.value = createLoadedState(
                     profile = savedProfile,
                     localImageUri = currentState.profileImageUri,
-                ).copy(myPosts = prevPosts, isLoadingMyPosts = prevLoadingPosts)
+                ).copy(
+                    myPosts = prevPosts,
+                    isLoadingMyPosts = prevLoadingPosts,
+                    savedPosts = prevSavedPosts
+                )
             }.onFailure {
                 _profileUiState.value = currentState.copy(
                     isSaving = false,
@@ -254,6 +272,8 @@ class ProfileViewModel(
             errorMessage = null,
             myPosts = emptyList(),
             isLoadingMyPosts = false,
+            savedPosts = emptyList(),
+            isLoadingSavedPosts = false
         )
     }
 
@@ -275,6 +295,8 @@ class ProfileViewModel(
             errorMessage = null,
             myPosts = previous?.myPosts ?: emptyList(),
             isLoadingMyPosts = previous?.isLoadingMyPosts ?: false,
+            savedPosts = previous?.savedPosts ?: emptyList(),
+            isLoadingSavedPosts = previous?.isLoadingSavedPosts ?: false
         )
     }
 }

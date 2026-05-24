@@ -1,6 +1,7 @@
 package com.example.piattoproject.ui.post
 
 import android.app.Application
+import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -14,38 +15,71 @@ class AddPostViewModel(application: Application) : AndroidViewModel(application)
     private val _uiState = MutableLiveData(AddPostUiState())
     val uiState: LiveData<AddPostUiState> = _uiState
 
-    fun loadPostForEdit(postId: String) {
-        _uiState.value = AddPostUiState(isLoading = true)
-        viewModelScope.launch {
-            repository.loadPost(postId)
-                .onSuccess { post ->
-                    _uiState.value = AddPostUiState(editingPost = post)
-                }
-                .onFailure { error ->
-                    _uiState.value = AddPostUiState(errorMessage = error.toUserMessage())
-                }
-        }
+    private var selectedImageUri: Uri? = null
+
+    fun setSelectedImageUri(uri: Uri?) {
+        selectedImageUri = uri
     }
 
     fun createPost(
         title: String,
         description: String,
-        imageUrl: String?,
         latitude: Double?,
         longitude: Double?,
     ) {
-        if (!validateInput(title, description)) {
+        if (title.isBlank() || description.isBlank()) {
+            _uiState.value = _uiState.value?.copy(errorMessage = "Please fill in all fields")
             return
         }
-        _uiState.value = _uiState.value.orEmpty().copy(isLoading = true, isSuccess = false, errorMessage = null)
+
+        _uiState.value = _uiState.value?.copy(isLoading = true, isSuccess = false, errorMessage = null)
+        
         viewModelScope.launch {
-            repository.createPost(
-                title = title.trim(),
-                description = description.trim(),
-                imageUrl = imageUrl?.trim(),
-                latitude = latitude,
-                longitude = longitude,
-            ).handleSaveResult()
+            try {
+                var imageUrl = ""
+                // 1. העלאת תמונה לענן אם נבחרה
+                selectedImageUri?.let { uri ->
+                    imageUrl = repository.uploadImage(uri)
+                }
+
+                // 2. שמירה ב-Firestore וב-Room (מתבצע בתוך ה-Repository)
+                repository.createPost(
+                    title = title.trim(),
+                    description = description.trim(),
+                    imageUrl = imageUrl,
+                    latitude = latitude,
+                    longitude = longitude,
+                ).onSuccess {
+                    _uiState.postValue(AddPostUiState(isSuccess = true))
+                }.onFailure { error ->
+                    _uiState.postValue(AddPostUiState(errorMessage = error.message, isLoading = false))
+                }
+            } catch (e: Exception) {
+                _uiState.postValue(AddPostUiState(errorMessage = "Image upload failed: ${e.message}", isLoading = false))
+            }
+        }
+    }
+
+    fun resetState() {
+        _uiState.value = AddPostUiState()
+    }
+
+    fun loadPostForEdit(postId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value?.copy(isLoading = true)
+            val post = repository.getPostById(postId)
+            if (post != null) {
+                // We need a way to pass this data to the Fragment
+                _uiState.postValue(_uiState.value?.copy(
+                    isLoading = false,
+                    editingPost = post
+                ))
+            } else {
+                _uiState.postValue(_uiState.value?.copy(
+                    isLoading = false,
+                    errorMessage = "Post not found"
+                ))
+            }
         }
     }
 
@@ -53,53 +87,40 @@ class AddPostViewModel(application: Application) : AndroidViewModel(application)
         postId: String,
         title: String,
         description: String,
-        imageUrl: String?,
+        latitude: Double?,
+        longitude: Double?,
     ) {
-        if (!validateInput(title, description)) {
+        if (title.isBlank() || description.isBlank()) {
+            _uiState.value = _uiState.value?.copy(errorMessage = "Please fill in all fields")
             return
         }
-        _uiState.value = _uiState.value.orEmpty().copy(isLoading = true, isSuccess = false, errorMessage = null)
+
+        _uiState.value = _uiState.value?.copy(isLoading = true, isSuccess = false, errorMessage = null)
+
         viewModelScope.launch {
-            repository.updatePost(
-                postId = postId,
-                title = title.trim(),
-                description = description.trim(),
-                imageUrl = imageUrl?.trim(),
-            ).handleSaveResult()
+            try {
+                var imageUrl: String? = null
+                // 1. Upload new image if selected
+                selectedImageUri?.let { uri ->
+                    imageUrl = repository.uploadImage(uri)
+                }
+
+                // 2. Update in Firestore and Room
+                repository.updatePost(
+                    postId = postId,
+                    title = title.trim(),
+                    description = description.trim(),
+                    imageUrl = imageUrl,
+                    latitude = latitude,
+                    longitude = longitude,
+                ).onSuccess {
+                    _uiState.postValue(AddPostUiState(isSuccess = true))
+                }.onFailure { error ->
+                    _uiState.postValue(_uiState.value?.copy(errorMessage = error.message, isLoading = false))
+                }
+            } catch (e: Exception) {
+                _uiState.postValue(_uiState.value?.copy(errorMessage = "Update failed: ${e.message}", isLoading = false))
+            }
         }
-    }
-
-    fun resetState() {
-        _uiState.value = _uiState.value.orEmpty().copy(isLoading = false, isSuccess = false, errorMessage = null)
-    }
-
-    private fun validateInput(title: String, description: String): Boolean {
-        if (title.isBlank() || description.isBlank()) {
-            _uiState.value = _uiState.value.orEmpty().copy(
-                isLoading = false,
-                isSuccess = false,
-                errorMessage = "Please fill in all fields",
-            )
-            return false
-        }
-        return true
-    }
-
-    private fun Result<Unit>.handleSaveResult() {
-        onSuccess {
-            _uiState.value = _uiState.value.orEmpty().copy(isLoading = false, isSuccess = true, errorMessage = null)
-        }.onFailure { error ->
-            _uiState.value = _uiState.value.orEmpty().copy(
-                isLoading = false,
-                isSuccess = false,
-                errorMessage = error.toUserMessage(),
-            )
-        }
-    }
-
-    private fun AddPostUiState?.orEmpty(): AddPostUiState = this ?: AddPostUiState()
-
-    private fun Throwable.toUserMessage(): String {
-        return message?.takeIf { it.isNotBlank() } ?: "Could not save post. Please try again."
     }
 }
