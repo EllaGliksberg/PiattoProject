@@ -17,16 +17,51 @@ class AddPostViewModel(application: Application) : AndroidViewModel(application)
 
     private var selectedImageUri: Uri? = null
 
+    private val _isLocationEnabled = MutableLiveData(false)
+    val isLocationEnabled: LiveData<Boolean> = _isLocationEnabled
+
+    private val _locationStatusText = MutableLiveData("(Optional)")
+    val locationStatusText: LiveData<String> = _locationStatusText
+
+    private var currentLat: Double? = null
+    private var currentLon: Double? = null
+
+    fun setLocationEnabled(enabled: Boolean) {
+        if (_isLocationEnabled.value != enabled) {
+            _isLocationEnabled.value = enabled
+            if (!enabled) {
+                currentLat = null
+                currentLon = null
+                _locationStatusText.value = "(Optional)"
+            } else if (currentLat == null) {
+                _locationStatusText.value = "Detecting location..."
+            }
+        }
+    }
+
+    fun setLocationCoords(lat: Double, lon: Double, address: String) {
+        currentLat = lat
+        currentLon = lon
+        _locationStatusText.postValue(address)
+        // Ensure switch stays ON if we got coords
+        if (_isLocationEnabled.value == false) {
+            _isLocationEnabled.postValue(true)
+        }
+    }
+
+    fun setLocationStatus(status: String) {
+        _locationStatusText.postValue(status)
+    }
+
+    fun hasValidCoordinates(): Boolean {
+        return currentLat != null && currentLon != null
+    }
+
     fun setSelectedImageUri(uri: Uri?) {
         selectedImageUri = uri
     }
 
-    fun createPost(
-        title: String,
-        description: String,
-        latitude: Double?,
-        longitude: Double?,
-    ) {
+    fun createPost(title: String, description: String) {
         if (title.isBlank() || description.isBlank()) {
             _uiState.value = _uiState.value?.copy(errorMessage = "Please fill in all fields")
             return
@@ -37,59 +72,28 @@ class AddPostViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 var imageUrl = ""
-                // 1. העלאת תמונה לענן אם נבחרה
                 selectedImageUri?.let { uri ->
                     imageUrl = repository.uploadImage(uri)
                 }
 
-                // 2. שמירה ב-Firestore וב-Room (מתבצע בתוך ה-Repository)
                 repository.createPost(
                     title = title.trim(),
                     description = description.trim(),
                     imageUrl = imageUrl,
-                    latitude = latitude,
-                    longitude = longitude,
+                    latitude = if (_isLocationEnabled.value == true) currentLat else null,
+                    longitude = if (_isLocationEnabled.value == true) currentLon else null,
                 ).onSuccess {
                     _uiState.postValue(AddPostUiState(isSuccess = true))
                 }.onFailure { error ->
-                    _uiState.postValue(AddPostUiState(errorMessage = error.message, isLoading = false))
+                    _uiState.postValue(_uiState.value?.copy(errorMessage = error.message, isLoading = false))
                 }
             } catch (e: Exception) {
-                _uiState.postValue(AddPostUiState(errorMessage = "Image upload failed: ${e.message}", isLoading = false))
+                _uiState.postValue(_uiState.value?.copy(errorMessage = "Upload failed: ${e.message}", isLoading = false))
             }
         }
     }
 
-    fun resetState() {
-        _uiState.value = AddPostUiState()
-    }
-
-    fun loadPostForEdit(postId: String) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value?.copy(isLoading = true)
-            val post = repository.getPostById(postId)
-            if (post != null) {
-                // We need a way to pass this data to the Fragment
-                _uiState.postValue(_uiState.value?.copy(
-                    isLoading = false,
-                    editingPost = post
-                ))
-            } else {
-                _uiState.postValue(_uiState.value?.copy(
-                    isLoading = false,
-                    errorMessage = "Post not found"
-                ))
-            }
-        }
-    }
-
-    fun updatePost(
-        postId: String,
-        title: String,
-        description: String,
-        latitude: Double?,
-        longitude: Double?,
-    ) {
+    fun updatePost(postId: String, title: String, description: String) {
         if (title.isBlank() || description.isBlank()) {
             _uiState.value = _uiState.value?.copy(errorMessage = "Please fill in all fields")
             return
@@ -100,19 +104,17 @@ class AddPostViewModel(application: Application) : AndroidViewModel(application)
         viewModelScope.launch {
             try {
                 var imageUrl: String? = null
-                // 1. Upload new image if selected
                 selectedImageUri?.let { uri ->
                     imageUrl = repository.uploadImage(uri)
                 }
 
-                // 2. Update in Firestore and Room
                 repository.updatePost(
                     postId = postId,
                     title = title.trim(),
                     description = description.trim(),
                     imageUrl = imageUrl,
-                    latitude = latitude,
-                    longitude = longitude,
+                    latitude = if (_isLocationEnabled.value == true) currentLat else null,
+                    longitude = if (_isLocationEnabled.value == true) currentLon else null,
                 ).onSuccess {
                     _uiState.postValue(AddPostUiState(isSuccess = true))
                 }.onFailure { error ->
@@ -122,5 +124,27 @@ class AddPostViewModel(application: Application) : AndroidViewModel(application)
                 _uiState.postValue(_uiState.value?.copy(errorMessage = "Update failed: ${e.message}", isLoading = false))
             }
         }
+    }
+
+    fun loadPostForEdit(postId: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value?.copy(isLoading = true)
+            val post = repository.getPostById(postId)
+            if (post != null) {
+                _uiState.postValue(_uiState.value?.copy(isLoading = false, editingPost = post))
+                if (post.latitude != null && post.longitude != null) {
+                    currentLat = post.latitude
+                    currentLon = post.longitude
+                    _isLocationEnabled.postValue(true)
+                    _locationStatusText.postValue("Location attached")
+                }
+            } else {
+                _uiState.postValue(_uiState.value?.copy(isLoading = false, errorMessage = "Post not found"))
+            }
+        }
+    }
+
+    fun resetState() {
+        _uiState.value = _uiState.value?.copy(errorMessage = null, isSuccess = false, isLoading = false)
     }
 }

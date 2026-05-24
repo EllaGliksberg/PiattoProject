@@ -1,6 +1,10 @@
 package com.example.piattoproject.ui.postdetails
 
+import android.content.Intent
+import android.location.Geocoder
+import android.net.Uri
 import android.os.Bundle
+import java.util.Locale
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -57,6 +61,34 @@ class PostDetailsFragment : Fragment() {
                 binding.detailsSavesCount.text = post.savesCount.toString()
 
                 ImageUtils.loadImage(binding.detailsImage, post.imageUrl)
+
+                if (post.latitude != null && post.longitude != null) {
+                    binding.locationContainer.visibility = View.VISIBLE
+                    
+                    // Display human-readable address
+                    try {
+                        val geocoder = Geocoder(requireContext(), Locale.getDefault())
+                        val addresses = geocoder.getFromLocation(post.latitude, post.longitude, 1)
+                        if (addresses != null && addresses.isNotEmpty()) {
+                            val address = addresses[0]
+                            val addressText = address.getAddressLine(0) ?: "${post.latitude}, ${post.longitude}"
+                            binding.tvLocationAddress.text = addressText
+                        } else {
+                            binding.tvLocationAddress.text = "Location: ${post.latitude}, ${post.longitude}"
+                        }
+                    } catch (e: Exception) {
+                        binding.tvLocationAddress.text = "Location: ${post.latitude}, ${post.longitude}"
+                    }
+
+                    binding.tvViewOnMap.setOnClickListener {
+                        val gmmIntentUri = Uri.parse("geo:${post.latitude},${post.longitude}?q=${post.latitude},${post.longitude}(${post.recipeTitle})")
+                        val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+                        mapIntent.setPackage("com.google.android.apps.maps")
+                        startActivity(mapIntent)
+                    }
+                } else {
+                    binding.locationContainer.visibility = View.GONE
+                }
             }
         }
 

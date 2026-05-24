@@ -134,9 +134,14 @@ class PostRepository(
             "lastUpdated" to updatedAt
         )
         imageUrl?.let { payload["imageUrl"] = it }
+        
+        // Handle location updates (allow removing location)
         if (latitude != null && longitude != null) {
             payload["latitude"] = latitude
             payload["longitude"] = longitude
+        } else {
+            payload["latitude"] = com.google.firebase.firestore.FieldValue.delete()
+            payload["longitude"] = com.google.firebase.firestore.FieldValue.delete()
         }
 
         firestore.collection(POSTS_COLLECTION).document(postId).update(payload).await()
@@ -148,8 +153,8 @@ class PostRepository(
                 recipeTitle = title,
                 description = description,
                 imageUrl = imageUrl ?: existingPost.imageUrl,
-                latitude = latitude ?: existingPost.latitude,
-                longitude = longitude ?: existingPost.longitude,
+                latitude = latitude,
+                longitude = longitude,
                 lastUpdated = updatedAt
             )
             postDao.insert(updatedPost)
