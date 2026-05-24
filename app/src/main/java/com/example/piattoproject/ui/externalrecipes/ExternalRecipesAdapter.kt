@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.piattoproject.R
 import com.example.piattoproject.data.remote.externalrecipes.MealDto
 import com.example.piattoproject.databinding.ItemExternalRecipeBinding
-import com.squareup.picasso.Picasso
+import com.example.piattoproject.utils.ImageUtils
 
 class ExternalRecipesAdapter : RecyclerView.Adapter<ExternalRecipesAdapter.RecipeViewHolder>() {
 
@@ -28,16 +28,8 @@ class ExternalRecipesAdapter : RecyclerView.Adapter<ExternalRecipesAdapter.Recip
         holder.binding.recipeCategoryTextView.visibility = if (meal.strCategory.isNullOrBlank()) View.GONE else View.VISIBLE
         holder.binding.recipeAreaTextView.text = meal.strArea.orEmpty()
         holder.binding.recipeAreaTextView.visibility = if (meal.strArea.isNullOrBlank()) View.GONE else View.VISIBLE
-        holder.binding.recipeImageView.setImageResource(R.drawable.ic_launcher_background)
-
-        val imageUrl = meal.strMealThumb
-        if (!imageUrl.isNullOrBlank()) {
-            Picasso.get()
-                .load(imageUrl)
-                .placeholder(R.drawable.ic_launcher_background)
-                .error(R.drawable.ic_launcher_background)
-                .into(holder.binding.recipeImageView)
-        }
+        
+        ImageUtils.loadImage(holder.binding.recipeImageView, meal.strMealThumb)
     }
 
     override fun getItemCount() = recipes.size

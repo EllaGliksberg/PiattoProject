@@ -16,6 +16,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentAddPostBinding
+import com.example.piattoproject.utils.ImageUtils
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 
@@ -123,12 +124,7 @@ class AddPostFragment : Fragment() {
             state.editingPost?.let { post ->
                 binding.editPostTitle.setText(post.recipeTitle)
                 binding.editPostDescription.setText(post.description)
-                if (post.imageUrl.isNotEmpty()) {
-                    com.squareup.picasso.Picasso.get()
-                        .load(post.imageUrl)
-                        .placeholder(R.drawable.ic_launcher_background)
-                        .into(binding.postImagePreview)
-                }
+                ImageUtils.loadImage(binding.postImagePreview, post.imageUrl)
             }
 
             if (state.isSuccess) {

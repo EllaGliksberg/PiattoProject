@@ -9,51 +9,63 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.UUID
 import androidx.lifecycle.LiveData
-
-import com.google.firebase.storage.FirebaseStorage
 import android.net.Uri
-import kotlinx.coroutines.tasks.await
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Base64
+import java.io.ByteArrayOutputStream
 
 class PostRepository(
-    context: Context,
+    private val context: Context,
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val firestore: FirebaseFirestore = FirebaseFirestore.getInstance(),
-    private val storage: FirebaseStorage = FirebaseStorage.getInstance(),
 ) {
     private val postDao = AppLocalDbRepository.getInstance(context.applicationContext).postDao()
 
     // 1. Single Source of Truth - תמיד מחזירים LiveData מ-Room
     val allPosts: LiveData<List<Post>> = postDao.getAll()
 
-    // העלאת תמונה ל-Firebase Storage
+    // המרת תמונה ל-Base64 במקום העלאה ל-Storage
     suspend fun uploadImage(imageUri: Uri): String = withContext(Dispatchers.IO) {
-        val user = auth.currentUser ?: throw IllegalStateException("Must be logged in to upload images")
-        val fileName = "post_images/${user.uid}/${UUID.randomUUID()}.jpg"
-        val ref = storage.reference.child(fileName)
-
         try {
-            android.util.Log.d("PostRepository", "Starting upload to: $fileName")
-            // העלאת הקובץ והמתנה לסיום מלא של המשימה
-            ref.putFile(imageUri).await()
-            android.util.Log.d("PostRepository", "Upload successful, getting URL...")
+            val inputStream = context.contentResolver.openInputStream(imageUri)
+            val originalBitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+
+            // כיווץ התמונה כדי שלא תחרוג ממגבלת ה-1MB של Firestore
+            val scaledBitmap = scaleBitmap(originalBitmap, 400)
             
-            // ניסיון לקבל את ה-URL עם Retry קטן (למקרה של עיכוב בשרת)
-            var downloadUrl: Uri? = null
-            for (i in 1..3) {
-                try {
-                    downloadUrl = ref.downloadUrl.await()
-                    break
-                } catch (e: Exception) {
-                    if (i == 3) throw e
-                    android.util.Log.w("PostRepository", "Retry $i getting URL...")
-                    kotlinx.coroutines.delay(1000)
-                }
-            }
-            downloadUrl?.toString() ?: throw Exception("Could not get download URL")
+            val outputStream = ByteArrayOutputStream()
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
+            val byteArray = outputStream.toByteArray()
+            
+            // החזרה של מחרוזת Base64 תקנית
+            "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
         } catch (e: Exception) {
-            android.util.Log.e("PostRepository", "STORAGE ERROR: ${e.message}", e)
-            throw Exception("Firebase Storage error: ${e.message}. Please check your Storage Rules in Firebase Console.")
+            android.util.Log.e("PostRepository", "BASE64 ERROR: ${e.message}", e)
+            throw Exception("Failed to process image: ${e.message}")
         }
+    }
+
+    private fun scaleBitmap(source: Bitmap, maxLength: Int): Bitmap {
+        val width = source.width
+        val height = source.height
+        
+        if (width <= maxLength && height <= maxLength) return source
+        
+        val aspectRatio = width.toFloat() / height.toFloat()
+        val newWidth: Int
+        val newHeight: Int
+        
+        if (width > height) {
+            newWidth = maxLength
+            newHeight = (maxLength / aspectRatio).toInt()
+        } else {
+            newHeight = maxLength
+            newWidth = (maxLength * aspectRatio).toInt()
+        }
+        
+        return Bitmap.createScaledBitmap(source, newWidth, newHeight, true)
     }
 
     // 2. טעינה מרוחקת ועדכון ה-Cache המקומי

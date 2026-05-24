@@ -10,7 +10,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentPostDetailsBinding
-import com.squareup.picasso.Picasso
+import com.example.piattoproject.utils.ImageUtils
 
 class PostDetailsFragment : Fragment() {
 
@@ -56,13 +56,7 @@ class PostDetailsFragment : Fragment() {
                 binding.detailsAuthor.text = "By ${post.creatorName}"
                 binding.detailsSavesCount.text = post.savesCount.toString()
 
-                if (post.imageUrl.isNotEmpty()) {
-                    Picasso.get()
-                        .load(post.imageUrl)
-                        .placeholder(android.R.drawable.ic_menu_gallery)
-                        .error(android.R.drawable.stat_notify_error)
-                        .into(binding.detailsImage)
-                }
+                ImageUtils.loadImage(binding.detailsImage, post.imageUrl)
             }
         }
 
