@@ -78,6 +78,7 @@ class ProfileFragment : Fragment() {
         super.onResume()
         if (::profileViewModel.isInitialized) {
             profileViewModel.refreshMyPosts()
+            profileViewModel.refreshSavedPosts()
         }
     }
 
@@ -180,6 +181,7 @@ class ProfileFragment : Fragment() {
         viewBinding.profileStatsLayout.visibility = if (uiState.isEditing) View.GONE else View.VISIBLE
 
         viewBinding.postsCountTextView.text = uiState.myPosts.size.toString()
+        viewBinding.savedCountTextView.text = uiState.savedPosts.size.toString()
         myPostsAdapter.submitList(uiState.myPosts)
         val showEmptyMyPosts = uiState.myPosts.isEmpty() && !uiState.isLoadingMyPosts
         viewBinding.myPostsEmptyTextView.visibility = if (showEmptyMyPosts) View.VISIBLE else View.GONE
