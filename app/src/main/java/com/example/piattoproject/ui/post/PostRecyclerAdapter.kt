@@ -10,6 +10,7 @@ import com.example.piattoproject.utils.ImageUtils
 
 class PostRecyclerAdapter(
     private val onPostClick: (Post) -> Unit,
+    private val onMenuClick: ((Post, android.view.View) -> Unit)? = null,
 ) : ListAdapter<Post, PostRecyclerAdapter.PostViewHolder>(PostDiffCallback()) {
 
     class PostViewHolder(val binding: PostListRowBinding) : RecyclerView.ViewHolder(binding.root)
@@ -25,6 +26,16 @@ class PostRecyclerAdapter(
         holder.binding.postDescription.text = post.description
         holder.binding.postAuthor.text = "By ${post.creatorName}"
         ImageUtils.loadImage(holder.binding.postImage, post.imageUrl)
+        
+        if (onMenuClick != null) {
+            holder.binding.btnPostMenu.visibility = android.view.View.VISIBLE
+            holder.binding.btnPostMenu.setOnClickListener {
+                onMenuClick.invoke(post, it)
+            }
+        } else {
+            holder.binding.btnPostMenu.visibility = android.view.View.GONE
+        }
+
         holder.itemView.setOnClickListener {
             onPostClick(post)
         }

@@ -28,7 +28,6 @@ class AddPostFragment : Fragment() {
     private val viewModel: AddPostViewModel by viewModels()
     private lateinit var fusedLocationClient: FusedLocationProviderClient
 
-    // Launcher לבחירת תמונה מהגלריה
     private val pickImageLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         uri?.let {
             binding.postImagePreview.setImageURI(it)
@@ -49,7 +48,6 @@ class AddPostFragment : Fragment() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         requestLocationPermissionIfNeeded()
 
-        // כפתור בחירת תמונה
         binding.btnPickImage.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
@@ -111,7 +109,6 @@ class AddPostFragment : Fragment() {
 
     private fun observeUiState() {
         viewModel.uiState.observe(viewLifecycleOwner) { state ->
-            // ניהול תצוגת טעינה
             binding.postProgressBar.visibility = if (state.isLoading) View.VISIBLE else View.GONE
             binding.savePostBtn.isEnabled = !state.isLoading
             binding.btnPickImage.isEnabled = !state.isLoading

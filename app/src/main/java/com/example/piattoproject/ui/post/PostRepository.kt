@@ -22,24 +22,20 @@ class PostRepository(
 ) {
     private val postDao = AppLocalDbRepository.getInstance(context.applicationContext).postDao()
 
-    // 1. Single Source of Truth - תמיד מחזירים LiveData מ-Room
     val allPosts: LiveData<List<Post>> = postDao.getAll()
 
-    // המרת תמונה ל-Base64 במקום העלאה ל-Storage
     suspend fun uploadImage(imageUri: Uri): String = withContext(Dispatchers.IO) {
         try {
             val inputStream = context.contentResolver.openInputStream(imageUri)
             val originalBitmap = BitmapFactory.decodeStream(inputStream)
             inputStream?.close()
 
-            // כיווץ התמונה כדי שלא תחרוג ממגבלת ה-1MB של Firestore
             val scaledBitmap = scaleBitmap(originalBitmap, 400)
             
             val outputStream = ByteArrayOutputStream()
             scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
             val byteArray = outputStream.toByteArray()
             
-            // החזרה של מחרוזת Base64 תקנית
             "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
         } catch (e: Exception) {
             android.util.Log.e("PostRepository", "BASE64 ERROR: ${e.message}", e)
@@ -68,7 +64,6 @@ class PostRepository(
         return Bitmap.createScaledBitmap(source, newWidth, newHeight, true)
     }
 
-    // 2. טעינה מרוחקת ועדכון ה-Cache המקומי
     suspend fun refreshPosts() = withContext(Dispatchers.IO) {
         try {
             val snapshot = firestore.collection(POSTS_COLLECTION)
@@ -80,7 +75,6 @@ class PostRepository(
                 doc.toPost()
             }
             
-            // שמירה ב-Room. ה-UI יתעדכן אוטומטית בזכות ה-LiveData
             postDao.insert(*posts.toTypedArray())
         } catch (e: Exception) {
             throw e
@@ -141,7 +135,6 @@ class PostRepository(
 
         firestore.collection(POSTS_COLLECTION).document(postId).update(payload).await()
         
-        // Update local room database
         withContext(Dispatchers.IO) {
             val existingPost = postDao.getPostById(postId) ?: return@withContext
             val updatedPost = existingPost.copy(
@@ -169,19 +162,16 @@ class PostRepository(
                 val currentSaves = postSnapshot.getLong("savesCount") ?: 0
 
                 if (savedSnapshot.exists()) {
-                    // Already saved -> Unsave
                     transaction.delete(userSavedPostRef)
                     transaction.update(postRef, "savesCount", (currentSaves - 1).coerceAtLeast(0))
                     false
                 } else {
-                    // Not saved -> Save
                     transaction.set(userSavedPostRef, mapOf("timestamp" to System.currentTimeMillis()))
                     transaction.update(postRef, "savesCount", currentSaves + 1)
                     true
                 }
             }.await()
 
-            // Refresh local DB for this post
             val updatedSnapshot = postRef.get().await()
             val updatedPost = updatedSnapshot.toPost()
             if (updatedPost != null) {
@@ -217,11 +207,9 @@ class PostRepository(
             val savedIds = savedSnapshot.documents.map { it.id }
             if (savedIds.isEmpty()) return@withContext emptyList()
 
-            // Get from local DB first
             val localPosts = postDao.getPostsByIds(savedIds)
             if (localPosts.size == savedIds.size) return@withContext localPosts
 
-            // If some missing locally, fetch from Firestore
             val remotePosts = firestore.collection(POSTS_COLLECTION)
                 .whereIn(com.google.firebase.firestore.FieldPath.documentId(), savedIds)
                 .get().await()

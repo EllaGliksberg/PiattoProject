@@ -37,10 +37,12 @@ class FeedFragment : Fragment() {
         val layoutManager = LinearLayoutManager(context)
         binding.postsRecyclerView.layoutManager = layoutManager
 
-        adapter = PostRecyclerAdapter { post ->
-            val action = FeedFragmentDirections.actionFeedToPostDetails(post.id)
-            findNavController().navigate(action)
-        }
+        adapter = PostRecyclerAdapter(
+            onPostClick = { post ->
+                val action = FeedFragmentDirections.actionFeedToPostDetails(post.id)
+                findNavController().navigate(action)
+            }
+        )
 
         binding.postsRecyclerView.adapter = adapter
 

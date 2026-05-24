@@ -106,9 +106,14 @@
                     android:orientation="horizontal">
 
                     <LinearLayout
+                        android:id="@+id/postsStatLayout"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="8dp"
                         android:orientation="vertical">
 
                         <TextView
@@ -128,10 +133,15 @@
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/savedStatLayout"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="48dp"
+                        android:layout_marginStart="32dp"
                         android:gravity="center"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:background="?attr/selectableItemBackground"
+                        android:padding="8dp"
                         android:orientation="vertical">
 
                         <TextView
