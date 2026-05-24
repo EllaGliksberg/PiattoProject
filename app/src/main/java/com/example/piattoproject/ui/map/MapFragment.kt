@@ -15,7 +15,6 @@ import androidx.navigation.fragment.findNavController
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentMapBinding
 import com.example.piattoproject.ui.post.Post
-import com.example.piattoproject.ui.post.PostViewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -24,6 +23,7 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.material.snackbar.Snackbar
 
 class MapFragment : Fragment(), OnMapReadyCallback {
 
@@ -32,7 +32,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     private var googleMap: GoogleMap? = null
     private lateinit var fusedLocationClient: FusedLocationProviderClient
-    private lateinit var postViewModel: PostViewModel
+    private lateinit var mapViewModel: MapViewModel
     private var posts: List<Post> = emptyList()
 
     private val requestLocationPermission =
@@ -63,15 +63,20 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState)
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
-        postViewModel = ViewModelProvider(this)[PostViewModel::class.java]
-        postViewModel.posts.observe(viewLifecycleOwner) { updatedPosts ->
+        mapViewModel = ViewModelProvider(this)[MapViewModel::class.java]
+        mapViewModel.posts.observe(viewLifecycleOwner) { updatedPosts ->
             posts = updatedPosts
             renderPostMarkers()
+        }
+        mapViewModel.errorMessage.observe(viewLifecycleOwner) { errorMessage ->
+            if (!errorMessage.isNullOrBlank()) {
+                Snackbar.make(binding.root, errorMessage, Snackbar.LENGTH_LONG).show()
+            }
         }
         val mapFragment = childFragmentManager.findFragmentById(R.id.mapContainer)
             as? SupportMapFragment
         mapFragment?.getMapAsync(this)
-        postViewModel.refreshPosts()
+        mapViewModel.loadMapPosts()
     }
 
     override fun onMapReady(map: GoogleMap) {

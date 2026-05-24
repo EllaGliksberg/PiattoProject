@@ -12,4 +12,5 @@ fun DocumentSnapshot.toPost(): Post = Post(
     latitude = getDouble("latitude"),
     longitude = getDouble("longitude"),
     lastUpdated = getLong("lastUpdated") ?: 0L,
+    savesCount = getLong("savesCount")?.toInt() ?: 0,
 )
