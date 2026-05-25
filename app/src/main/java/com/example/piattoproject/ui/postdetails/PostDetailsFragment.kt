@@ -35,6 +35,10 @@ class PostDetailsFragment : Fragment() {
 
         observeViewModel()
 
+        binding.backButton.setOnClickListener {
+            findNavController().popBackStack()
+        }
+
         binding.editPostBtn.setOnClickListener {
             val action = PostDetailsFragmentDirections.actionPostDetailsToAddPost(
                 postId = args.postId,

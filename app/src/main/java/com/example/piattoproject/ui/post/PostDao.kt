@@ -8,26 +8,26 @@ interface PostDao {
     fun getAll(): androidx.lifecycle.LiveData<List<Post>>
 
     @Query("SELECT * FROM posts ORDER BY lastUpdated DESC LIMIT :limit")
-    fun getFeedOrdered(limit: Int): List<Post>
+    suspend fun getFeedOrdered(limit: Int): List<Post>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    fun insert(vararg posts: Post)
+    suspend fun insert(vararg posts: Post)
 
     @Delete
-    fun delete(post: Post)
+    suspend fun delete(post: Post)
 
     @Query("DELETE FROM posts WHERE id = :id")
-    fun deleteById(id: String)
+    suspend fun deleteById(id: String)
 
     @Query("SELECT * FROM posts WHERE creatorName = :userName")
-    fun getPostsByUsername(userName: String): List<Post>
+    suspend fun getPostsByUsername(userName: String): List<Post>
 
     @Query("SELECT * FROM posts WHERE creatorUid = :creatorUid ORDER BY lastUpdated DESC")
-    fun getPostsByCreatorUid(creatorUid: String): List<Post>
+    suspend fun getPostsByCreatorUid(creatorUid: String): List<Post>
 
     @Query("SELECT * FROM posts WHERE id = :id")
-    fun getPostById(id: String): Post?
+    suspend fun getPostById(id: String): Post?
 
     @Query("SELECT * FROM posts WHERE id IN (:ids)")
-    fun getPostsByIds(ids: List<String>): List<Post>
+    suspend fun getPostsByIds(ids: List<String>): List<Post>
 }

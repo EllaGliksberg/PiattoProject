@@ -8,7 +8,6 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.piattoproject.databinding.FragmentFeedBinding
 import com.google.android.material.snackbar.Snackbar
 
@@ -45,17 +44,6 @@ class FeedFragment : Fragment() {
         )
 
         binding.postsRecyclerView.adapter = adapter
-
-        binding.postsRecyclerView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
-            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-                if (dy <= 0) return
-                val lastVisible = layoutManager.findLastVisibleItemPosition()
-                val total = layoutManager.itemCount
-                if (lastVisible >= total - 3) {
-                    viewModel.loadNextPage()
-                }
-            }
-        })
 
         binding.feedSwipeRefresh.setOnRefreshListener {
             viewModel.refreshPosts()

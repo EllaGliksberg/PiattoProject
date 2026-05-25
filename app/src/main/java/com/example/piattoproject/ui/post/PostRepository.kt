@@ -1,19 +1,17 @@
 package com.example.piattoproject.ui.post
 
 import android.content.Context
+import androidx.lifecycle.LiveData
+import android.net.Uri
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
+import com.example.piattoproject.utils.ImageUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.util.UUID
-import androidx.lifecycle.LiveData
-import android.net.Uri
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
-import java.io.ByteArrayOutputStream
 
 class PostRepository(
     private val context: Context,
@@ -23,62 +21,57 @@ class PostRepository(
     private val postDao = AppLocalDbRepository.getInstance(context.applicationContext).postDao()
 
     val allPosts: LiveData<List<Post>> = postDao.getAll()
+    private val syncPreferences = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     suspend fun uploadImage(imageUri: Uri): String = withContext(Dispatchers.IO) {
         try {
-            val inputStream = context.contentResolver.openInputStream(imageUri)
-            val originalBitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream?.close()
-
-            val scaledBitmap = scaleBitmap(originalBitmap, 400)
-            
-            val outputStream = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
-            val byteArray = outputStream.toByteArray()
-            
-            "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
+            ImageUtils.encodeImageUriToBase64(context, imageUri)
         } catch (e: Exception) {
             android.util.Log.e("PostRepository", "BASE64 ERROR: ${e.message}", e)
             throw Exception("Failed to process image: ${e.message}")
         }
     }
 
-    private fun scaleBitmap(source: Bitmap, maxLength: Int): Bitmap {
-        val width = source.width
-        val height = source.height
-        
-        if (width <= maxLength && height <= maxLength) return source
-        
-        val aspectRatio = width.toFloat() / height.toFloat()
-        val newWidth: Int
-        val newHeight: Int
-        
-        if (width > height) {
-            newWidth = maxLength
-            newHeight = (maxLength / aspectRatio).toInt()
-        } else {
-            newHeight = maxLength
-            newWidth = (maxLength * aspectRatio).toInt()
+    suspend fun syncPostsDelta(): Result<Unit> = runCatching {
+        val lastSync = getLastSync()
+        val snapshot = firestore.collection(POSTS_COLLECTION)
+            .whereGreaterThan(FIELD_LAST_UPDATED, lastSync)
+            .orderBy(FIELD_LAST_UPDATED, Query.Direction.ASCENDING)
+            .get()
+            .await()
+
+        val changedPosts = snapshot.documents.mapNotNull { doc -> doc.toPost() }
+        Log.d("DeltaSync", "lastSync = $lastSync")
+        Log.d("DeltaSync", "changed posts = ${changedPosts.size}")
+
+        withContext(Dispatchers.IO) {
+            if (changedPosts.isNotEmpty()) {
+                postDao.insert(*changedPosts.toTypedArray())
+            }
         }
-        
-        return Bitmap.createScaledBitmap(source, newWidth, newHeight, true)
+
+        val newLastSync = changedPosts.maxOfOrNull { it.lastUpdated } ?: System.currentTimeMillis()
+        saveLastSync(newLastSync)
     }
 
-    suspend fun refreshPosts() = withContext(Dispatchers.IO) {
-        try {
-            val snapshot = firestore.collection(POSTS_COLLECTION)
-                .orderBy("lastUpdated", Query.Direction.DESCENDING)
-                .get()
-                .await()
-            
-            val posts = snapshot.documents.mapNotNull { doc ->
-                doc.toPost()
+    suspend fun loadMapPosts(limit: Int = MAP_POSTS_LIMIT): Result<List<Post>> = runCatching {
+        val snapshot = firestore.collection(POSTS_COLLECTION)
+            .orderBy(FIELD_LAST_UPDATED, Query.Direction.DESCENDING)
+            .limit(limit.toLong())
+            .get()
+            .await()
+
+        val postsWithLocation = snapshot.documents
+            .mapNotNull { it.toPost() }
+            .filter { it.latitude != null && it.longitude != null }
+
+        withContext(Dispatchers.IO) {
+            if (postsWithLocation.isNotEmpty()) {
+                postDao.insert(*postsWithLocation.toTypedArray())
             }
-            
-            postDao.insert(*posts.toTypedArray())
-        } catch (e: Exception) {
-            throw e
         }
+
+        postsWithLocation
     }
 
     suspend fun createPost(
@@ -196,7 +189,29 @@ class PostRepository(
     }
 
     suspend fun getPostById(postId: String): Post? = withContext(Dispatchers.IO) {
-        postDao.getPostById(postId)
+        val localPost = postDao.getPostById(postId)
+        if (localPost != null) {
+            return@withContext localPost
+        }
+
+        try {
+            val remotePost = firestore.collection(POSTS_COLLECTION)
+                .document(postId)
+                .get()
+                .await()
+                .takeIf { it.exists() }
+                ?.toPost()
+            if (remotePost != null) {
+                postDao.insert(remotePost)
+            }
+            remotePost
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    suspend fun deleteCachedPost(postId: String) = withContext(Dispatchers.IO) {
+        postDao.deleteById(postId)
     }
 
     suspend fun getSavedPostsForCurrentUser(): List<Post> = withContext(Dispatchers.IO) {
@@ -248,7 +263,7 @@ class PostRepository(
             "imageUrl" to imageUrl,
             "creatorName" to creatorName,
             "creatorUid" to creatorUid,
-            "lastUpdated" to lastUpdated,
+            FIELD_LAST_UPDATED to lastUpdated,
             "savesCount" to savesCount,
         )
         if (latitude != null && longitude != null) {
@@ -258,7 +273,19 @@ class PostRepository(
         return payload
     }
 
+    private fun getLastSync(): Long {
+        return syncPreferences.getLong(KEY_LAST_SYNC, 0L)
+    }
+
+    private fun saveLastSync(timestamp: Long) {
+        syncPreferences.edit().putLong(KEY_LAST_SYNC, timestamp).apply()
+    }
+
     private companion object {
         const val POSTS_COLLECTION = "posts"
+        private const val PREFS_NAME = "post_sync_prefs"
+        private const val KEY_LAST_SYNC = "last_posts_sync"
+        private const val FIELD_LAST_UPDATED = "lastUpdated"
+        private const val MAP_POSTS_LIMIT = 100
     }
 }
