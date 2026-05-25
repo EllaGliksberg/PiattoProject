@@ -21,7 +21,6 @@ abstract class AppLocalDbRepository : RoomDatabase() {
                     "piatto_db.db"
                 )
                     .fallbackToDestructiveMigration()
-                    .allowMainThreadQueries()
                     .build().also { instance = it }
             }
         }

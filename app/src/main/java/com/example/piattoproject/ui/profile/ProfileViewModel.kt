@@ -7,7 +7,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.piattoproject.utils.ImageUtils
-import com.example.piattoproject.ui.post.AppLocalDbRepository
 import com.example.piattoproject.ui.post.Post
 import com.example.piattoproject.ui.post.PostRepository
 import kotlinx.coroutines.Dispatchers
@@ -58,10 +57,8 @@ class ProfileViewModel(
     fun deletePost(post: Post) {
         viewModelScope.launch {
             runCatching {
-                withContext(Dispatchers.IO) {
-                    userPostsRepository.deletePostForCurrentUser(post.id)
-                    AppLocalDbRepository.getInstance(appContext).postDao().deleteById(post.id)
-                }
+                userPostsRepository.deletePostForCurrentUser(post.id)
+                postRepository.deleteCachedPost(post.id)
             }.onSuccess {
                 val state = _profileUiState.value ?: return@launch
                 _profileUiState.value = state.copy(
