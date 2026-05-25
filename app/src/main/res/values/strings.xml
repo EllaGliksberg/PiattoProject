@@ -1,3 +1,61 @@
 <resources>
-    <string name="app_name">PiattoProject</string>
+    <string name="app_name">Piatto</string>
+    <string name="nav_app_name">Piatto</string>
+    <string name="nav_feed">Feed</string>
+    <string name="nav_upload">Upload</string>
+    <string name="nav_profile">My profile</string>
+    <string name="nav_logout">Logout</string>
+    <string name="map_location_permission_denied">Location permission denied. Showing default map area.</string>
+    <string name="map_location_unavailable">Current location unavailable. Showing default map area.</string>
+
+    <string name="auth_login_title">Welcome back</string>
+    <string name="auth_login_subtitle">Sign in to continue</string>
+    <string name="auth_register_title">Create your account</string>
+    <string name="auth_register_subtitle">Register to use the app</string>
+    <string name="auth_register_username_hint">Username</string>
+    <string name="auth_email_hint">Email</string>
+    <string name="auth_password_hint">Password</string>
+    <string name="auth_confirm_password_hint">Confirm password</string>
+    <string name="auth_login_button">Login</string>
+    <string name="auth_register_button">Register</string>
+    <string name="auth_switch_to_register">Need an account? Register</string>
+    <string name="auth_switch_to_login">Already have an account? Login</string>
+
+    <string name="profile_title">Profile</string>
+    <string name="profile_photo_content_description">Profile photo</string>
+    <string name="mock_display_name">Ella Gliksberg</string>
+    <string name="mock_username">ella_cooks</string>
+    <string name="mock_bio">Recipe lover sharing quick and healthy Mediterranean dishes.</string>
+    <string name="profile_edit_button">Edit profile</string>
+    <string name="profile_save_button">Save</string>
+    <string name="profile_cancel_button">Cancel</string>
+    <string name="profile_label_name">Name</string>
+    <string name="profile_label_username">Username</string>
+    <string name="profile_label_bio">Bio</string>
+    <string name="profile_syncing">Syncing profile...</string>
+
+    <!-- Navigation Labels (compatibility) -->
+    <string name="bottom_nav_feed">Feed</string>
+    <string name="bottom_nav_create">Create</string>
+    <string name="bottom_nav_profile">Profile</string>
+    <string name="bottom_nav_map">Map</string>
+    <string name="bottom_nav_recipes">Recipes</string>
+    <string name="external_recipes_search_hint">Search recipes</string>
+    <string name="external_recipes_search_button">Search</string>
+    <string name="external_recipe_image_content_description">Recipe image</string>
+    <string name="profile_stat_posts">Posts</string>
+    <string name="profile_stat_saved">Saved</string>
+    <string name="profile_my_posts_section">My posts</string>
+    <string name="profile_no_posts_yet">No posts yet</string>
+    <string name="profile_post_thumbnail_content_description">Post image</string>
+    <string name="profile_post_menu_content_description">Post options</string>
+    <string name="profile_post_menu_edit">Edit</string>
+    <string name="profile_post_menu_delete">Delete</string>
+    <string name="profile_post_delete_title">Delete post?</string>
+    <string name="profile_post_delete_message">This cannot be undone.</string>
+    <string name="profile_post_delete_confirm">Delete</string>
+    <string name="add_post_content_description">Add post</string>
+    <string name="add_post_save_changes">Save changes</string>
+    <string name="add_post_post_recipe">Post recipe</string>
+    <string name="post_updated_success">Post updated</string>
 </resources>
