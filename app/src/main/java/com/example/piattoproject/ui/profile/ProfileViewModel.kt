@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.piattoproject.utils.ImageUtils
 import com.example.piattoproject.ui.post.Post
 import com.example.piattoproject.ui.post.PostRepository
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -19,35 +20,70 @@ class ProfileViewModel(
     private val profileRepository: FirebaseProfileRepository = FirebaseProfileRepository(),
     private val userPostsRepository: FirebaseUserPostsRepository = FirebaseUserPostsRepository(),
     private val postRepository: PostRepository = PostRepository(appContext),
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
 ) : ViewModel() {
     private val _profileUiState = MutableLiveData(createInitialState())
     val profileUiState: LiveData<ProfileUiState> = _profileUiState
+    private var loadedUserId: String? = null
 
     init {
-        loadProfile()
+        refreshForCurrentUser()
+    }
+
+    fun refreshForCurrentUser() {
+        val currentUserId = auth.currentUser?.uid
+        if (currentUserId == loadedUserId) {
+            return
+        }
+
+        loadedUserId = currentUserId
+        if (currentUserId == null) {
+            _profileUiState.value = createInitialState().copy(isLoading = false)
+            return
+        }
+
+        _profileUiState.value = createInitialState()
+        loadProfile(currentUserId)
+        refreshMyPosts()
         refreshSavedPosts()
     }
 
+    fun clearForSignedOutUser() {
+        loadedUserId = null
+        _profileUiState.value = createInitialState().copy(isLoading = false)
+    }
+
     fun refreshSavedPosts() {
+        val expectedUserId = loadedUserId ?: return
         val current = _profileUiState.value ?: createInitialState()
         _profileUiState.value = current.copy(isLoadingSavedPosts = true)
         viewModelScope.launch {
             val posts = postRepository.getSavedPostsForCurrentUser()
+            if (!isCurrentUser(expectedUserId)) {
+                return@launch
+            }
             val state = _profileUiState.value ?: return@launch
             _profileUiState.value = state.copy(savedPosts = posts, isLoadingSavedPosts = false)
         }
     }
 
     fun refreshMyPosts() {
+        val expectedUserId = loadedUserId ?: return
         val current = _profileUiState.value ?: createInitialState()
         _profileUiState.value = current.copy(isLoadingMyPosts = true)
         viewModelScope.launch {
             runCatching { userPostsRepository.loadPostsForSignedInUser() }
                 .onSuccess { posts ->
+                    if (!isCurrentUser(expectedUserId)) {
+                        return@launch
+                    }
                     val state = _profileUiState.value ?: return@launch
                     _profileUiState.value = state.copy(myPosts = posts, isLoadingMyPosts = false)
                 }
                 .onFailure {
+                    if (!isCurrentUser(expectedUserId)) {
+                        return@launch
+                    }
                     val state = _profileUiState.value ?: return@launch
                     _profileUiState.value = state.copy(isLoadingMyPosts = false)
                 }
@@ -72,18 +108,24 @@ class ProfileViewModel(
         }
     }
 
-    private fun loadProfile() {
+    private fun loadProfile(expectedUserId: String) {
         val currentState = _profileUiState.value ?: createInitialState()
         _profileUiState.value = currentState.copy(isLoading = true, errorMessage = null)
         viewModelScope.launch {
             runCatching { profileRepository.loadProfile() }
                 .onSuccess { profile ->
+                    if (!isCurrentUser(expectedUserId)) {
+                        return@launch
+                    }
                     _profileUiState.value = createLoadedState(
                         profile = profile,
                         imageReference = profile.imageUrl,
                     )
                 }
                 .onFailure {
+                    if (!isCurrentUser(expectedUserId)) {
+                        return@launch
+                    }
                     _profileUiState.value = currentState.copy(
                         isLoading = false,
                         errorMessage = "Could not load profile. Check your connection and try again.",
@@ -240,6 +282,10 @@ class ProfileViewModel(
             return
         }
         _profileUiState.value = currentState.copy(errorMessage = null)
+    }
+
+    private fun isCurrentUser(expectedUserId: String): Boolean {
+        return auth.currentUser?.uid == expectedUserId && loadedUserId == expectedUserId
     }
 
     private fun validateDisplayName(displayName: String): String? {
