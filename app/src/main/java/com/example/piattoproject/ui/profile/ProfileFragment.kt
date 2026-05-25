@@ -77,6 +77,7 @@ class ProfileFragment : Fragment() {
     override fun onResume() {
         super.onResume()
         if (::profileViewModel.isInitialized) {
+            profileViewModel.refreshForCurrentUser()
             profileViewModel.refreshMyPosts()
             profileViewModel.refreshSavedPosts()
         }
@@ -175,6 +176,7 @@ class ProfileFragment : Fragment() {
 
     private fun logout() {
         FirebaseAuth.getInstance().signOut()
+        profileViewModel.clearForSignedOutUser()
         findNavController().navigate(R.id.action_global_logout)
     }
 
