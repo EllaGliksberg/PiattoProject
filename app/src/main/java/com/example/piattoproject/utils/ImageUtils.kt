@@ -52,13 +52,7 @@ object ImageUtils {
 
         if (normalizedReference.startsWith("data:image")) {
             try {
-                val base64String = normalizedReference.substringAfter(",", missingDelimiterValue = "")
-                if (base64String.isBlank()) {
-                    imageView.setImageResource(android.R.drawable.ic_menu_gallery)
-                    return
-                }
-                val imageBytes = Base64.decode(base64String, Base64.DEFAULT)
-                val decodedImage = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+                val decodedImage = decodeBase64Image(normalizedReference)
                 if (decodedImage == null) {
                     imageView.setImageResource(android.R.drawable.stat_notify_error)
                 } else {
@@ -73,6 +67,25 @@ object ImageUtils {
                 .placeholder(android.R.drawable.ic_menu_gallery)
                 .error(android.R.drawable.stat_notify_error)
                 .into(imageView)
+        }
+    }
+
+    fun decodeBase64Image(imageReference: String?): Bitmap? {
+        val normalizedReference = imageReference?.trim().orEmpty()
+        if (!normalizedReference.startsWith("data:image")) {
+            return null
+        }
+
+        val base64String = normalizedReference.substringAfter(",", missingDelimiterValue = "")
+        if (base64String.isBlank()) {
+            return null
+        }
+
+        return try {
+            val imageBytes = Base64.decode(base64String, Base64.DEFAULT)
+            BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.size)
+        } catch (_: Exception) {
+            null
         }
     }
 

@@ -162,7 +162,25 @@ class PostRepository(
     }
 
     suspend fun getPostById(postId: String): Post? = withContext(Dispatchers.IO) {
-        postDao.getPostById(postId)
+        val localPost = postDao.getPostById(postId)
+        if (localPost != null) {
+            return@withContext localPost
+        }
+
+        try {
+            val remotePost = firestore.collection(POSTS_COLLECTION)
+                .document(postId)
+                .get()
+                .await()
+                .takeIf { it.exists() }
+                ?.toPost()
+            if (remotePost != null) {
+                postDao.insert(remotePost)
+            }
+            remotePost
+        } catch (_: Exception) {
+            null
+        }
     }
 
     suspend fun getSavedPostsForCurrentUser(): List<Post> = withContext(Dispatchers.IO) {

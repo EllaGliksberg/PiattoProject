@@ -19,6 +19,8 @@ import com.example.piattoproject.databinding.FragmentAddPostBinding
 import com.example.piattoproject.utils.ImageUtils
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 
 class AddPostFragment : Fragment() {
 
@@ -73,18 +75,8 @@ class AddPostFragment : Fragment() {
         val title = binding.editPostTitle.text.toString()
         val desc = binding.editPostDescription.text.toString()
 
-        if (hasLocationPermission()) {
-            try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    viewModel.updatePost(postId, title, desc, location?.latitude, location?.longitude)
-                }.addOnFailureListener {
-                    viewModel.updatePost(postId, title, desc, null, null)
-                }
-            } catch (e: SecurityException) {
-                viewModel.updatePost(postId, title, desc, null, null)
-            }
-        } else {
-            viewModel.updatePost(postId, title, desc, null, null)
+        getCurrentPostLocation { latitude, longitude ->
+            viewModel.updatePost(postId, title, desc, latitude, longitude)
         }
     }
 
@@ -92,18 +84,47 @@ class AddPostFragment : Fragment() {
         val title = binding.editPostTitle.text.toString()
         val desc = binding.editPostDescription.text.toString()
 
-        if (hasLocationPermission()) {
-            try {
-                fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-                    viewModel.createPost(title, desc, location?.latitude, location?.longitude)
-                }.addOnFailureListener {
-                    viewModel.createPost(title, desc, null, null)
+        getCurrentPostLocation { latitude, longitude ->
+            viewModel.createPost(title, desc, latitude, longitude)
+        }
+    }
+
+    private fun getCurrentPostLocation(onLocationReady: (Double?, Double?) -> Unit) {
+        if (!hasLocationPermission()) {
+            onLocationReady(null, null)
+            return
+        }
+
+        try {
+            fusedLocationClient.lastLocation
+                .addOnSuccessListener { lastKnownLocation ->
+                    if (lastKnownLocation != null) {
+                        onLocationReady(lastKnownLocation.latitude, lastKnownLocation.longitude)
+                    } else {
+                        requestCurrentLocation(onLocationReady)
+                    }
                 }
-            } catch (e: SecurityException) {
-                viewModel.createPost(title, desc, null, null)
+                .addOnFailureListener {
+                    requestCurrentLocation(onLocationReady)
+                }
+        } catch (_: SecurityException) {
+            onLocationReady(null, null)
+        }
+    }
+
+    private fun requestCurrentLocation(onLocationReady: (Double?, Double?) -> Unit) {
+        try {
+            val cancellationTokenSource = CancellationTokenSource()
+            fusedLocationClient.getCurrentLocation(
+                Priority.PRIORITY_HIGH_ACCURACY,
+                cancellationTokenSource.token,
+            ).addOnSuccessListener { location ->
+                onLocationReady(location?.latitude, location?.longitude)
+            }.addOnFailureListener {
+                onLocationReady(null, null)
             }
-        } else {
-            viewModel.createPost(title, desc, null, null)
+        } catch (_: SecurityException) {
+            onLocationReady(null, null)
         }
     }
 
