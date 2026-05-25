@@ -10,10 +10,7 @@ import kotlinx.coroutines.withContext
 import java.util.UUID
 import androidx.lifecycle.LiveData
 import android.net.Uri
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
-import android.util.Base64
-import java.io.ByteArrayOutputStream
+import com.example.piattoproject.utils.ImageUtils
 
 class PostRepository(
     private val context: Context,
@@ -26,42 +23,11 @@ class PostRepository(
 
     suspend fun uploadImage(imageUri: Uri): String = withContext(Dispatchers.IO) {
         try {
-            val inputStream = context.contentResolver.openInputStream(imageUri)
-            val originalBitmap = BitmapFactory.decodeStream(inputStream)
-            inputStream?.close()
-
-            val scaledBitmap = scaleBitmap(originalBitmap, 400)
-            
-            val outputStream = ByteArrayOutputStream()
-            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
-            val byteArray = outputStream.toByteArray()
-            
-            "data:image/jpeg;base64," + Base64.encodeToString(byteArray, Base64.NO_WRAP)
+            ImageUtils.encodeImageUriToBase64(context, imageUri)
         } catch (e: Exception) {
             android.util.Log.e("PostRepository", "BASE64 ERROR: ${e.message}", e)
             throw Exception("Failed to process image: ${e.message}")
         }
-    }
-
-    private fun scaleBitmap(source: Bitmap, maxLength: Int): Bitmap {
-        val width = source.width
-        val height = source.height
-        
-        if (width <= maxLength && height <= maxLength) return source
-        
-        val aspectRatio = width.toFloat() / height.toFloat()
-        val newWidth: Int
-        val newHeight: Int
-        
-        if (width > height) {
-            newWidth = maxLength
-            newHeight = (maxLength / aspectRatio).toInt()
-        } else {
-            newHeight = maxLength
-            newWidth = (maxLength * aspectRatio).toInt()
-        }
-        
-        return Bitmap.createScaledBitmap(source, newWidth, newHeight, true)
     }
 
     suspend fun refreshPosts() = withContext(Dispatchers.IO) {

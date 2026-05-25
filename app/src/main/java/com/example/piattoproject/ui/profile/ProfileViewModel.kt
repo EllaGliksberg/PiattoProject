@@ -1,10 +1,12 @@
 package com.example.piattoproject.ui.profile
 
 import android.content.Context
+import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.piattoproject.utils.ImageUtils
 import com.example.piattoproject.ui.post.AppLocalDbRepository
 import com.example.piattoproject.ui.post.Post
 import com.example.piattoproject.ui.post.PostRepository
@@ -81,7 +83,7 @@ class ProfileViewModel(
                 .onSuccess { profile ->
                     _profileUiState.value = createLoadedState(
                         profile = profile,
-                        localImageUri = profileImageLocalStore.getProfileImageUri(),
+                        imageReference = profile.imageUrl,
                     )
                 }
                 .onFailure {
@@ -186,7 +188,7 @@ class ProfileViewModel(
                 val prevSavedPosts = _profileUiState.value?.savedPosts ?: currentState.savedPosts
                 _profileUiState.value = createLoadedState(
                     profile = savedProfile,
-                    localImageUri = currentState.profileImageUri,
+                    imageReference = currentState.profileImageUri,
                 ).copy(
                     myPosts = prevPosts,
                     isLoadingMyPosts = prevLoadingPosts,
@@ -203,13 +205,28 @@ class ProfileViewModel(
         }
     }
 
-    fun onProfileImageSelected(uri: String) {
+    fun onProfileImageSelected(uri: Uri) {
         val currentState = _profileUiState.value ?: return
-        profileImageLocalStore.saveProfileImageUri(uri)
-        _profileUiState.value = currentState.copy(
-            profileImageUri = uri,
-            errorMessage = null,
-        )
+        _profileUiState.value = currentState.copy(isSaving = true, errorMessage = null)
+        viewModelScope.launch {
+            runCatching {
+                val encodedImage = withContext(Dispatchers.IO) {
+                    ImageUtils.encodeImageUriToBase64(appContext, uri)
+                }
+                profileRepository.saveProfileImage(encodedImage)
+            }.onSuccess { savedProfile ->
+                profileImageLocalStore.saveProfileImageUri(null)
+                _profileUiState.value = createLoadedState(
+                    profile = savedProfile,
+                    imageReference = savedProfile.imageUrl,
+                )
+            }.onFailure {
+                _profileUiState.value = currentState.copy(
+                    isSaving = false,
+                    errorMessage = "Could not save profile image. Please try again.",
+                )
+            }
+        }
     }
 
     fun onProfileImageLoadFailed() {
@@ -217,7 +234,6 @@ class ProfileViewModel(
         if (currentState.profileImageUri == null) {
             return
         }
-        profileImageLocalStore.saveProfileImageUri(null)
         _profileUiState.value = currentState.copy(profileImageUri = null)
     }
 
@@ -277,13 +293,13 @@ class ProfileViewModel(
         )
     }
 
-    private fun createLoadedState(profile: FirebaseProfile, localImageUri: String?): ProfileUiState {
+    private fun createLoadedState(profile: FirebaseProfile, imageReference: String?): ProfileUiState {
         val previous = _profileUiState.value
         return ProfileUiState(
             displayName = profile.fullName,
             username = profile.username,
             bio = profile.bio,
-            profileImageUri = localImageUri,
+            profileImageUri = imageReference,
             editedDisplayName = profile.fullName,
             editedUsername = profile.username,
             editedBio = profile.bio,

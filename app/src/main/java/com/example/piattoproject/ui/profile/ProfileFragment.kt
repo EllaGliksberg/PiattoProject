@@ -17,6 +17,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import com.example.piattoproject.R
 import com.example.piattoproject.databinding.FragmentProfileBinding
 import com.example.piattoproject.ui.post.Post
+import com.example.piattoproject.utils.ImageUtils
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
@@ -37,7 +38,7 @@ class ProfileFragment : Fragment() {
             )
         } catch (_: SecurityException) {
         }
-        profileViewModel.onProfileImageSelected(uri.toString())
+        profileViewModel.onProfileImageSelected(uri)
     }
 
     override fun onCreateView(
@@ -230,23 +231,13 @@ class ProfileFragment : Fragment() {
         }
     }
 
-    private fun bindProfileImage(profileImageUri: String?) {
+    private fun bindProfileImage(profileImageReference: String?) {
         val viewBinding = binding ?: return
-        if (profileImageUri.isNullOrBlank()) {
+        if (profileImageReference.isNullOrBlank()) {
             viewBinding.profileImageView.setImageResource(android.R.drawable.ic_menu_myplaces)
             return
         }
-        val uri = Uri.parse(profileImageUri)
-        try {
-            viewBinding.profileImageView.setImageURI(null)
-            viewBinding.profileImageView.setImageURI(uri)
-        } catch (_: SecurityException) {
-            profileViewModel.onProfileImageLoadFailed()
-            viewBinding.profileImageView.setImageResource(android.R.drawable.ic_menu_myplaces)
-        } catch (_: IllegalArgumentException) {
-            profileViewModel.onProfileImageLoadFailed()
-            viewBinding.profileImageView.setImageResource(android.R.drawable.ic_menu_myplaces)
-        }
+        ImageUtils.loadImage(viewBinding.profileImageView, profileImageReference)
     }
 
     private fun updateEditTextIfDifferent(currentValue: String?, targetValue: String, onUpdate: () -> Unit) {

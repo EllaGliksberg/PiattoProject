@@ -3,6 +3,7 @@ package com.example.piattoproject.ui.profile
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
 import kotlinx.coroutines.tasks.await
 
 class FirebaseProfileRepository(
@@ -21,7 +22,7 @@ class FirebaseProfileRepository(
             fullName = snapshot.getString(FIELD_FULL_NAME).orEmpty(),
             username = snapshot.getString(FIELD_USERNAME).orEmpty(),
             bio = snapshot.getString(FIELD_BIO).orEmpty(),
-            imageUrl = null,
+            imageUrl = snapshot.getString(FIELD_IMAGE_URL),
         )
     }
 
@@ -37,13 +38,23 @@ class FirebaseProfileRepository(
             FIELD_BIO to bio,
             FIELD_UPDATED_AT to FieldValue.serverTimestamp(),
         )
-        firestore.collection(USERS_COLLECTION).document(uid).set(payload).await()
+        firestore.collection(USERS_COLLECTION).document(uid).set(payload, SetOptions.merge()).await()
         return FirebaseProfile(
             fullName = fullName,
             username = username,
             bio = bio,
-            imageUrl = null,
+            imageUrl = loadProfile().imageUrl,
         )
+    }
+
+    suspend fun saveProfileImage(imageUrl: String?): FirebaseProfile {
+        val uid = ensureSignedInUserId()
+        val payload = hashMapOf<String, Any>(
+            FIELD_IMAGE_URL to imageUrl.orEmpty(),
+            FIELD_UPDATED_AT to FieldValue.serverTimestamp(),
+        )
+        firestore.collection(USERS_COLLECTION).document(uid).update(payload).await()
+        return loadProfile()
     }
 
     private suspend fun ensureSignedInUserId(): String {
@@ -69,6 +80,7 @@ class FirebaseProfileRepository(
         const val FIELD_FULL_NAME = "fullName"
         const val FIELD_USERNAME = "username"
         const val FIELD_BIO = "bio"
+        const val FIELD_IMAGE_URL = "imageUrl"
         const val FIELD_UPDATED_AT = "updatedAt"
     }
 }
