@@ -50,6 +50,10 @@ class AddPostFragment : Fragment() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
         requestLocationPermissionIfNeeded()
 
+        binding.backButton.setOnClickListener {
+            findNavController().popBackStack()
+        }
+
         binding.btnPickImage.setOnClickListener {
             pickImageLauncher.launch("image/*")
         }
